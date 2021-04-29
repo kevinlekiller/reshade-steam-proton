@@ -51,14 +51,18 @@ LICENSE
     
     Finally we are asked to run the game, set the paths to the folders in the ReShade settings for the Effects / Textures.
 DESCRIPTION
+function printErr() {
+    echo -e "Error: $1\nExiting."
+    exit 1
+}
 MAIN_PATH=${MAIN_PATH:-~/.reshade}
 RESHADE_PATH="$MAIN_PATH/reshade"
 echo "ReShade installer/updater for Steam and proton on Linux."
-mkdir -p "$MAIN_PATH"
+mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
 cd "$MAIN_PATH"
 if [[ ! -d reshade-shaders ]]; then
     echo -e "Installing reshade shaders.\n------------------------------------------------------------------------------------------------"
-    git clone --branch master https://github.com/crosire/reshade-shaders || exit 1
+    git clone --branch master https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
 else
     echo -e "Updating reshade shaders.\n------------------------------------------------------------------------------------------------"
     cd reshade-shaders
@@ -73,13 +77,15 @@ if [[ -e VERS ]]; then
 fi
 echo -e "Checking for Reshade updates.\n------------------------------------------------------------------------------------------------"
 RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe" || exit 1)
+if ! [[ $? -eq 0 ]]; then printErr "Could not fetch ReShade version."; fi
 if [[ $RVERS != $VERS ]]; then
     echo -e "Updating Reshade."
     tmpDir=$(mktemp -d || exit 1)
     cd "$tmpDir"
-    wget -q https://reshade.me/"$RVERS" || exit 1
+    wget -q https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
     exeFile="$(find . -name *.exe || exit 1)"
-    7z -y e "$exeFile" 1> /dev/null || exit 1
+    if ! [[ $? -eq 0 ]]; then printErr "Download of ReShade exe file failed."; fi
+    7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
     mv *32.dll d3d9.dll
     mv *64.dll dxgi.dll
     rm -f "$exeFile"
@@ -113,7 +119,7 @@ if [[ $steamid =~ ^[0-9]*$ ]]; then
     fi
 fi
 echo -e "Installing reshade to game directory.\n------------------------------------------------------------------------------------------------"
-echo 'Supply the folder path where the main executable (exe fle) for the game is. (On default steam settings, look in ~/.local/share/Steam/steamapps/common/) (Control+c to exit)'
+echo 'Supply the folder path where the main executable (exe file) for the game is. (On default steam settings, look in ~/.local/share/Steam/steamapps/common/) (Control+c to exit)'
 while true; do
     read -p 'Game path: ' gamePath
     ls "$gamePath" > /dev/null 2>&1
