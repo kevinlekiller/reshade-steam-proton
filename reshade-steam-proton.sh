@@ -58,7 +58,7 @@ mkdir -p "$MAIN_PATH"
 cd "$MAIN_PATH"
 if [[ ! -d reshade-shaders ]]; then
     echo -e "Installing reshade shaders.\n------------------------------------------------------------------------------------------------"
-	git clone --branch master https://github.com/crosire/reshade-shaders || exit 1
+    git clone --branch master https://github.com/crosire/reshade-shaders || exit 1
 else
     echo -e "Updating reshade shaders.\n------------------------------------------------------------------------------------------------"
     cd reshade-shaders
