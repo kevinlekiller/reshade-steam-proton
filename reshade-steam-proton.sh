@@ -57,25 +57,26 @@ function printErr() {
 }
 MAIN_PATH=${MAIN_PATH:-~/.reshade}
 RESHADE_PATH="$MAIN_PATH/reshade"
+SEPERATOR="------------------------------------------------------------------------------------------------"
 echo "ReShade installer/updater for Steam and proton on Linux."
 mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
 cd "$MAIN_PATH"
 if [[ ! -d reshade-shaders ]]; then
-    echo -e "Installing reshade shaders.\n------------------------------------------------------------------------------------------------"
+    echo -e "Installing reshade shaders.\n$SEPERATOR"
     git clone --branch master https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
 else
-    echo -e "Updating reshade shaders.\n------------------------------------------------------------------------------------------------"
+    echo -e "Updating reshade shaders.\n$SEPERATOR"
     cd reshade-shaders
     git pull || exit 1
     cd "$MAIN_PATH"
 fi
-echo "------------------------------------------------------------------------------------------------"
+echo "$SEPERATOR"
 mkdir -p "$RESHADE_PATH"
 VERS=0
 if [[ -e VERS ]]; then
     VERS=$(cat VERS)
 fi
-echo -e "Checking for Reshade updates.\n------------------------------------------------------------------------------------------------"
+echo -e "Checking for Reshade updates.\n$SEPERATOR"
 RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe" || exit 1)
 if ! [[ $? -eq 0 ]]; then printErr "Could not fetch ReShade version."; fi
 if [[ $RVERS != $VERS ]]; then
@@ -96,8 +97,8 @@ if [[ $RVERS != $VERS ]]; then
     echo "$RVERS" > VERS
     rm -rf "$tmpDir"
 fi
-echo "------------------------------------------------------------------------------------------------"
-echo -e "Installing d3dcompiler_47 and setting dxgi override. Make sure to run the game at least once for steam to create the appropriate directories.\n------------------------------------------------------------------------------------------------"
+echo "$SEPERATOR"
+echo -e "Installing d3dcompiler_47 and setting dxgi override. Make sure to run the game at least once for steam to create the appropriate directories.\n$SEPERATOR"
 echo 'Supply the steamid of the game to install d3dcompiler_47 (To find the steamid, run: protontricks -s Name_Of_Game). (Control+c to exit)'
 echo "Enter n to skip this if d3dcompiler_47 is already installed and dxgi override is already set."
 while true; do
@@ -106,7 +107,7 @@ while true; do
         break
     fi
 done
-echo "------------------------------------------------------------------------------------------------"
+echo "$SEPERATOR"
 if [[ $steamid =~ ^[0-9]*$ ]]; then
     protontricks $steamid d3dcompiler_47
     regFile=~/".local/share/Steam/steamapps/compatdata/$steamid/pfx/user.reg"
@@ -114,11 +115,10 @@ if [[ $steamid =~ ^[0-9]*$ ]]; then
         sed -i 's/^"\*d3dcompiler_47"="native"/\0\n"dxgi"="native,builtin"\n"d3d9"="native,builtin"/' "$regFile"
     fi
     if [[ ! -e $regFile ]] || [[ $(grep -Po '^"dxgi"="native,builtin"' $regFile) == "" ]]; then
-        echo "Could not modify or find user.reg file: \"$regFile\""
-        echo -e "Manually run: protontricks $steamid winecfg\nIn the Libraries tab, Add dxgi.dll and d3d9.dll and make sure they are set to \"native,builtin\"."
+        echo -e "Could not modify or find user.reg file: \"$regFile\"\nManually run: protontricks $steamid winecfg\nIn the Libraries tab, Add dxgi.dll and d3d9.dll and make sure they are set to \"native,builtin\"."
     fi
 fi
-echo -e "Installing reshade to game directory.\n------------------------------------------------------------------------------------------------"
+echo -e "Installing reshade to game directory.\n$SEPERATOR"
 echo 'Supply the folder path where the main executable (exe file) for the game is. (On default steam settings, look in ~/.local/share/Steam/steamapps/common/) (Control+c to exit)'
 while true; do
     read -p 'Game path: ' gamePath
@@ -137,5 +137,4 @@ gamePath="$(realpath "$gamePath")"
 ln -is $(realpath ~/.reshade/reshade/*) "$gamePath/"
 ln -is $(realpath ~/.reshade/reshade-shaders/Textures) "$gamePath/"
 ln -is $(realpath ~/.reshade/reshade-shaders/Shaders) "$gamePath/"
-echo "------------------------------------------------------------------------------------------------"
-echo -e "Done.\nWhen you start the game for the first time, open the ReShade settings, go to the 'Settings' tab, add the Shaders folder location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'."
+echo -e "$SEPERATOR\nDone.\nWhen you start the game for the first time, open the ReShade settings, go to the 'Settings' tab, add the Shaders folder location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'."
