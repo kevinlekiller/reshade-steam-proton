@@ -125,7 +125,6 @@ function getGamePath() {
     echo 'On default steam settings, look in ~/.local/share/Steam/steamapps/common/'
     echo '(Control+c to exit)'
     while true; do
-        gamePath=
         read -rp 'Game path: ' gamePath
         eval gamePath="$gamePath"
         gamePath=$(realpath "$gamePath")
@@ -224,10 +223,7 @@ fi
 echo "$SEPERATOR"
 mkdir -p "$RESHADE_PATH"
 
-VERS=0
-if [[ -e VERS ]]; then
-    VERS=$(cat VERS)
-fi
+[[ -f VERS ]] && VERS=$(cat VERS) || VERS=0
 
 if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
@@ -260,16 +256,14 @@ getGamePath
 
 echo "Do you want $0 to attempt to automatically detect the right dll to use for ReShade?"
 
-wantedDll="manual"
-if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
-    wantedDll="auto"
-fi
+[[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && wantedDll="auto" || wantedDll="manual"
 
 if [[ $wantedDll == "auto" ]]; then
     exeArch=32
     for file in "$gamePath/"*.exe; do
         if [[ $(file "$file") =~ x86-64 ]]; then
             exeArch=64
+            break
         fi
     done
     [[ $exeArch -eq 32 ]] && wantedDll="d3d9" || wantedDll="dxgi"
