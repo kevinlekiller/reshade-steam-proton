@@ -14,7 +14,7 @@ This will link dxgi.dll to the game using a different name, for example opengl32
 Example on a opengl game (Like Wolfenstein: The New Order): `CUSTOM_OVERRIDE=opengl32 ./reshade-steam-proton.sh`
 
 By default, files are downloaded to `~/.reshade`  
-You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-steam-proton.sh
+You can override this by setting the `MAIN_PATH` variable, for example: `MAIN_PATH=~/Documents/reshade ./reshade-steam-proton.sh`
 
 Requires `grep`, `curl`, `7z`, `wget`, `protontricks`.
 
