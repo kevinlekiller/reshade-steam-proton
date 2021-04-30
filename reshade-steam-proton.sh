@@ -164,7 +164,7 @@ while true; do
     fi
 done
 gamePath="$(realpath "$gamePath")"
-if ! -z [[ $CUSTOM_OVERRIDE ]]; then
+if ! [[ -z $CUSTOM_OVERRIDE ]]; then
     echo "Linking dxgi.dll as $CUSTOM_OVERRIDE.dll."
     ln -is $(realpath ~/.reshade/reshade/dxgi.dll) "$gamePath/$CUSTOM_OVERRIDE.dll"
 fi
