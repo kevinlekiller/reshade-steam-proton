@@ -22,12 +22,12 @@ LICENSE
     By linking, we can re-run this script and all the games automatically get the newest ReShade and
     shader versions.
     
-    Enviroment Variables:
+    Environment Variables:
         UPDATE_RESHADE
-            To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0
+            To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0 ; ex.: UPDATE_RESHADE=0 ./reshade-steam-proton.sh
     
         D3DCOMPILER
-            To skip installing d3dcompiler_47, set D3DCOMPILER=0
+            To skip installing d3dcompiler_47, set D3DCOMPILER=0 ; ex.: D3DCOMPILER=0 ./reshade-steam-proton.sh
     
         MAIN_PATH
             By default, ReShade / shader files are stored in ~/.reshade
@@ -45,6 +45,13 @@ LICENSE
         to Steam's proton before running, you can switch back to proton-ge after.
     
     Usage:
+        Download the script
+            wget https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-steam-proton.sh
+        Make it executable:
+            chmod u+x reshade-steam-proton.sh
+        Run it:
+            ./reshade-steam-proton.sh
+        
         Installing ReShade for a game:
             Example on Back To The Future Episode 1:
             
@@ -57,6 +64,7 @@ LICENSE
                 Run this script.
                 
                 Type i to install ReShade.
+                    If you have never run this script, the shaders and ReShade will be downloaded.
                 
                 Find the game directory where the .exe file is.
                     You can open the Steam client, right click the game, click Properties,
@@ -162,7 +170,7 @@ COMMON_OVERRIDES="d3d8 d3d9 d3d11 ddraw dinput8 dxgi opengl32"
 
 echo -e "$SEPERATOR\nReShade installer/updater for Steam and proton on Linux.\n$SEPERATOR\n"
 
-MAIN_PATH=${MAIN_PATH:-~/".reshade test"}
+MAIN_PATH=${MAIN_PATH:-~/".reshade"}
 RESHADE_PATH="$MAIN_PATH/reshade"
 
 mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
