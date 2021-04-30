@@ -65,7 +65,7 @@ LICENSE
 DESCRIPTION
 function printErr() {
     echo -e "Error: $1\nExiting."
-    exit 1
+    [[ -z $2 ]] && exit 1 || exit $2
 }
 MAIN_PATH=${MAIN_PATH:-~/.reshade}
 CUSTOM_OVERRIDE=${CUSTOM_OVERRIDE:-}
@@ -73,8 +73,7 @@ if [[ ! -z $CUSTOM_OVERRIDE ]] && [[ ! $CUSTOM_OVERRIDE =~ ^(opengl32|d3d11)$ ]]
     echo "You have entered '$CUSTOM_OVERRIDE' as the CUSTOM_OVERRIDE, is this correct?"
     read -p '(y/n): ' ynCheck
     if ! [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
-        echo "Exiting."
-        exit 1
+        printErr "Wrong CUSTOM_OVERRIDE"
     fi
 fi
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
@@ -174,4 +173,4 @@ fi
 ln -is $(realpath ~/.reshade/reshade/*) "$gamePath/"
 ln -is $(realpath ~/.reshade/reshade-shaders/Textures) "$gamePath/"
 ln -is $(realpath ~/.reshade/reshade-shaders/Shaders) "$gamePath/"
-echo -e "$SEPERATOR\nDone.\nWhen you start the game for the first time, open the ReShade settings, go to the 'Settings' tab, add the Shaders folder location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'."
+echo -e "$SEPERATOR\nDone.\nThe next time you start the game, open the ReShade settings, go to the 'Settings' tab, add the Shaders folder location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'."
