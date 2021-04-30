@@ -69,7 +69,8 @@ function printErr() {
 }
 MAIN_PATH=${MAIN_PATH:-~/.reshade}
 CUSTOM_OVERRIDE=${CUSTOM_OVERRIDE:-}
-if [[ ! -z $CUSTOM_OVERRIDE ]] && [[ ! $CUSTOM_OVERRIDE =~ ^(opengl32|d3d11)$ ]]; then
+CUSTOM_OVERRIDE=$(echo "$CUSTOM_OVERRIDE" | sed "s/.dll//")
+if [[ ! -z $CUSTOM_OVERRIDE ]] && [[ ! $CUSTOM_OVERRIDE =~ ^(opengl32|d3d11|dinput8|ddraw|d3d8)$ ]]; then
     echo "You have entered '$CUSTOM_OVERRIDE' as the CUSTOM_OVERRIDE, is this correct?"
     read -p '(y/n): ' ynCheck
     if ! [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
