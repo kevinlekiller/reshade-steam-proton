@@ -106,6 +106,9 @@ LICENSE
 DESCRIPTION
 
 function printErr() {
+    if [[ -d $tmpDir ]]; then
+        rm -rf "$tmpDir"
+    fi
     echo -e "Error: $1\nExiting."
     [[ -z $2 ]] && exit 1 || exit "$2"
 }
