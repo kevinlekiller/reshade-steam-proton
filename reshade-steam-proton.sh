@@ -102,12 +102,12 @@ DESCRIPTION
 
 function printErr() {
     echo -e "Error: $1\nExiting."
-    [[ -z $2 ]] && exit 1 || exit $2
+    [[ -z $2 ]] && exit 1 || exit "$2"
 }
 
 function checkStdin() {
     while true; do
-        read -p "$1" userInput
+        read -rp "$1" userInput
         if [[ $userInput =~ $2 ]]; then
             break
         fi
@@ -121,7 +121,7 @@ function getGamePath() {
     echo '(Control+c to exit)'
     while true; do
         gamePath=
-        read -p 'Game path: ' gamePath
+        read -rp 'Game path: ' gamePath
         
         gamePath="$(realpath "$gamePath")" 2> /dev/null
         
@@ -159,7 +159,7 @@ function checkUserReg() {
         echo "Could not modify or find user.reg file: \"$regFile\""
         echo "Manually run: protontricks $SteamID winecfg"
         echo "In the Libraries tab, $1."
-        read -p 'Press any key to continue.'
+        read -rp 'Press any key to continue.'
     fi
 }
 
@@ -174,27 +174,17 @@ MAIN_PATH=${MAIN_PATH:-~/".reshade"}
 RESHADE_PATH="$MAIN_PATH/reshade"
 
 mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
-cd "$MAIN_PATH"
+cd "$MAIN_PATH" || exit
 
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
 D3DCOMPILER=${D3DCOMPILER:-1}
-
-DLLOVERRIDE=${DLLOVERRIDE:-}
-DLLOVERRIDE=$(echo "$DLLOVERRIDE" | sed "s/.dll//")
-if [[ ! -z $DLLOVERRIDE ]] && [[ ! $DLLOVERRIDE =~ $(echo $COMMON_OVERRIDES | sed 's/ /|/g' | sed 's/^/^(/' | sed 's/$/)$/') ]]; then
-    echo "You have entered '$DLLOVERRIDE' as the DLLOVERRIDE, is this correct?"
-    read -p '(y/n): ' ynCheck
-    if ! [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
-        printErr "Wrong DLLOVERRIDE"
-    fi
-fi
 
 echo "Do you want to (i)nstall or (u)ninstall ReShade for a game?"
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
     getSteamID
     echo "Unlinking ReShade files."
-    LINKS="$(echo $COMMON_OVERRIDES | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade32.json ReShade64.json Shaders Textures"
+    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade32.json ReShade64.json Shaders Textures"
     for link in $LINKS; do
         if [[ -L $gamePath/$link ]]; then
             echo "Unlinking \"$gamePath/$link\"."
@@ -203,14 +193,14 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     done
     
     echo "Removing dll overrides."
-    checkUserReg "remove overrides for $(echo $COMMON_OVERRIDES | sed 's/ / ,/g')"
+    checkUserReg "remove overrides for $(echo "$COMMON_OVERRIDES" | sed 's/ / ,/g')"
     if [[ -f $regFile ]]; then
         for override in $COMMON_OVERRIDES; do
-            pattern=$(echo $OVERRIDE_REGEX | sed "s/OVERRIDE/$override/")
-            if [[ $(grep -Po $pattern $regFile) != "" ]]; then
+            pattern=$(echo "$OVERRIDE_REGEX" | sed "s/OVERRIDE/$override/")
+            if [[ $(grep -Po "$pattern" "$regFile") != "" ]]; then
                 pattern="s/$pattern\n//g"
                 echo "Removing dll override (sed -zi '$pattern' \"$regFile\")."
-                sed -zi $pattern "$regFile"
+                sed -zi "$pattern" "$regFile"
             fi
         done
     fi
@@ -223,9 +213,9 @@ if [[ ! -d reshade-shaders ]]; then
     git clone --branch master https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
 elif [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Updating reshade shaders.\n$SEPERATOR"
-    cd reshade-shaders
+    cd reshade-shaders || printErr "reshade-shaders folder missing."
     git pull || printErr "Could not update ReShade shaders."
-    cd "$MAIN_PATH"
+    cd "$MAIN_PATH" || exit
 fi
 
 echo "$SEPERATOR"
@@ -242,22 +232,22 @@ if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     if ! [[ $? -eq 0 ]]; then
         printErr "Could not fetch ReShade version."
     fi
-    if [[ $RVERS != $VERS ]]; then
+    if [[ $RVERS != "$VERS" ]]; then
         echo -e "Updating Reshade."
         tmpDir=$(mktemp -d)
         cd "$tmpDir" || printErr "Failed to create temp directory."
         wget -q https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
-        exeFile="$(find . -name *.exe || exit 1)"
-        if ! [[ $? -eq 0 ]]; then
+        exeFile="$(find . -name "*.exe")"
+        if ! [[ -f $exeFile ]]; then
             printErr "Download of ReShade exe file failed."
         fi
         7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
-        mv *32.dll d3d9.dll
-        mv *64.dll dxgi.dll
+        mv ./*32.dll d3d9.dll
+        mv ./*64.dll dxgi.dll
         rm -f "$exeFile"
-        rm -rf "$RESHADE_PATH"/*
-        mv * "$RESHADE_PATH/"
-        cd "$MAIN_PATH"
+        rm -rf "${RESHADE_PATH:?}"/*
+        mv ./* "$RESHADE_PATH/"
+        cd "$MAIN_PATH" || exit
         echo "$RVERS" > VERS
         rm -rf "$tmpDir"
     fi
@@ -275,7 +265,7 @@ fi
 if [[ $wantedDll == "auto" ]]; then
     exeArch=32
     for file in "$gamePath/"*.exe; do
-        if [[ $(file $file) =~ x86-64 ]]; then
+        if [[ $(file "$file") =~ x86-64 ]]; then
             exeArch=64
         fi
     done
@@ -289,9 +279,9 @@ fi
 if [[ $wantedDll == "manual" ]]; then
     echo "Manually enter the dll override for ReShade, common values are one of: $COMMON_OVERRIDES"
     while true; do
-        read -p 'Override: ' wantedDll
+        read -rp 'Override: ' wantedDll
         echo "You have entered '$wantedDll', is this correct?"
-        read -p '(y/n): ' ynCheck
+        read -rp '(y/n): ' ynCheck
         if [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
             break
         fi
@@ -302,12 +292,12 @@ getSteamID
 
 if [[ $D3DCOMPILER -eq 1 ]]; then
     echo -e "$SEPERATOR\nInstalling d3dcompiler_47 using protontricks."
-    protontricks $SteamID d3dcompiler_47
+    protontricks "$SteamID" d3dcompiler_47
 fi
 
 checkUserReg "Add $wantedDll and make sure it is set to  \"native,builtin\"."
 
-if [[ -f $regFile ]] && [[ $(grep -Po "^\"$wantedDll\"=\"native,builtin\"" $regFile) == "" ]]; then
+if [[ -f $regFile ]] && [[ $(grep -Po "^\"$wantedDll\"=\"native,builtin\"" "$regFile") == "" ]]; then
     echo "Adding dll override for $wantedDll."
     sed -i "s/^\"\*d3dcompiler_47\"=\"native\"/\0\n\"$wantedDll\"=\"native,builtin\"/" "$regFile"
 fi
