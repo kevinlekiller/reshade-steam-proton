@@ -26,11 +26,11 @@ LICENSE
     to the part that asks you for the steamid), we can also use it to install ReShade for a specific game, this
     will also make sure ReShade and the shaders are up to date.
     
-    To skip checking for ReShade / shader updates, pass UPDATE_RESHADE=0
+    To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0
     
-    To skip installing d3dcompiler_47, pass D3DCOMPILER=0
+    To skip installing d3dcompiler_47, set D3DCOMPILER=0
     
-    To use a custom dll override (instead of dxgi.dll) pass CUSTOM_OVERRIDE=
+    To use a custom dll override (instead of dxgi.dll) set CUSTOM_OVERRIDE=
     This will link dxgi.dll to the game using a different name, for example opengl32.dll and set a wine override for it.
     Example on a opengl game (Like Wolfenstein: The New Order): CUSTOM_OVERRIDE=opengl32 ./reshade-steam-proton.sh
     
