@@ -36,6 +36,9 @@ LICENSE
     
     Requires grep, curl, 7z, wget, protontricks.
     
+    NOTE: Overriding and installing the d3dcompiler_47 dll seems to occasionally fail with proton-ge under protontricks, switch
+    to Steam's proton before running, you can switch back to proton-ge after.
+    
     Example usage:
     
     If we want to install ReShade on Back To The Future Episode 1:
