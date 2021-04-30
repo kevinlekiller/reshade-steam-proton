@@ -1,5 +1,5 @@
 #!/bin/bash
-<<LICENSE
+cat > /dev/null <<LICENSE
     Copyright (C) 2021  kevinlekiller
     
     This program is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 LICENSE
-<<DESCRIPTION
+cat > /dev/null <<DESCRIPTION
     Bash script to download ReShade and the shaders and link them to Steam games on Linux.
     By linking, we can re-run this script and all the games automatically get the newest ReShade and
     shader versions.
@@ -44,6 +44,11 @@ LICENSE
     Notes:
         Overriding and installing the d3dcompiler_47 dll seems to occasionally fail with proton-ge under protontricks, switch
         to Steam's proton before running, you can switch back to proton-ge after.
+        
+        OpenGL games like Wolfenstein: The New Order, require the dll to be named opengl32.dll
+        You will want to respond 'n' when asked for automatic detection of the dll.
+        Then you will write 'opengl32' when asked for the name of the dll to override.
+        You can check on pcgamingwiki.com to see what graphic API the game uses.
     
     Usage:
         Download the script
@@ -200,10 +205,10 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     done
     
     echo "Removing dll overrides."
-    checkUserReg "remove overrides for $(echo "$COMMON_OVERRIDES" | sed 's/ / ,/g')"
+    checkUserReg "remove overrides for ${COMMON_OVERRIDES// /, })"
     if [[ -f $regFile ]]; then
         for override in $COMMON_OVERRIDES; do
-            pattern=$(echo "$OVERRIDE_REGEX" | sed "s/OVERRIDE/$override/")
+            pattern=${OVERRIDE_REGEX//OVERRIDE/$override}
             if [[ $(grep -Po "$pattern" "$regFile") != "" ]]; then
                 pattern="s/$pattern\n//g"
                 echo "Removing dll override (sed -zi '$pattern' \"$regFile\")."
@@ -282,6 +287,7 @@ if [[ $wantedDll == "manual" ]]; then
     echo "Manually enter the dll override for ReShade, common values are one of: $COMMON_OVERRIDES"
     while true; do
         read -rp 'Override: ' wantedDll
+        wantedDll=${wantedDll//.dll/}
         echo "You have entered '$wantedDll', is this correct?"
         read -rp '(y/n): ' ynCheck
         if [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
