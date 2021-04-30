@@ -127,17 +127,15 @@ function getGamePath() {
     while true; do
         gamePath=
         read -rp 'Game path: ' gamePath
+        eval gamePath="$gamePath"
+        gamePath=$(realpath "$gamePath")
         
-        gamePath="$(realpath "$gamePath")" 2> /dev/null
-        
-        ls "$gamePath" > /dev/null 2>&1
-        if [[ $? != 0 ]] || [[ -z $gamePath ]]; then
+        if ! ls "$gamePath" > /dev/null 2>&1 || [[ -z $gamePath ]]; then
             echo "Incorrect or empty path supplied. You supplied \"$gamePath\"."
             continue
         fi
         
-        ls "$gamePath/"*.exe > /dev/null 2>&1
-        if [[ $? != 0 ]]; then
+        if ! ls "$gamePath/"*.exe > /dev/null 2>&1; then
             echo "No .exe file found in \"$gamePath\"."
             echo "Do you still want to use this directory?"
             if [[ $(checkStdin "(y/n) " "^(y|n)$") != "y" ]]; then
@@ -233,8 +231,8 @@ fi
 
 if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe" || exit 1)
-    if ! [[ $? -eq 0 ]]; then
+    RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    if [[ $RVERS == "" ]]; then
         printErr "Could not fetch ReShade version."
     fi
     if [[ $RVERS != "$VERS" ]]; then
