@@ -39,6 +39,7 @@ LICENSE
         7z
         wget
         protontricks
+        git
     
     Notes:
         Overriding and installing the d3dcompiler_47 dll seems to occasionally fail with proton-ge under protontricks, switch
@@ -46,7 +47,11 @@ LICENSE
     
     Usage:
         Download the script
-            wget https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-steam-proton.sh
+            Using wget:
+                wget https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-steam-proton.sh
+            Using git:
+                git clone https://github.com/kevinlekiller/reshade-steam-proton
+                cd reshade-steam-proton
         Make it executable:
             chmod u+x reshade-steam-proton.sh
         Run it:
