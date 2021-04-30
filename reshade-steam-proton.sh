@@ -66,11 +66,6 @@ LICENSE
                 Find the SteamID: protontricks -s Back To The Future
                     Back to the Future: Ep 1 - It's About Time (31290)
                 
-                Run this script.
-                
-                Type i to install ReShade.
-                    If you have never run this script, the shaders and ReShade will be downloaded.
-                
                 Find the game directory where the .exe file is.
                     You can open the Steam client, right click the game, click Properties,
                     click Local Files, clicking Browse, find the directory with the main
@@ -79,6 +74,14 @@ LICENSE
                     Or you can run : find ~/.local -iname 'Back to the future*'
                     Then run : ls "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1"
                     We see BackToTheFuture101.exe is in this directory.
+                
+                Run this script.
+                
+                Type i to install ReShade.
+                    If you have never run this script, the shaders and ReShade will be downloaded.
+                
+                Supply the game directory where exe file is, when asked:
+                    /home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1
                 
                 Select if you want it to automatically detect the correct dll file for ReShade or
                 to manually specity it.
@@ -102,7 +105,6 @@ LICENSE
         Removing ReShade / shader files:
             By default the files are stored in ~/.reshade
             Run: rm -rf ~/.reshade
-            
 DESCRIPTION
 
 function printErr() {
@@ -160,8 +162,8 @@ function getSteamID() {
 function checkUserReg() {
     regFile=~/".local/share/Steam/steamapps/compatdata/$SteamID/pfx/user.reg"
     if [[ ! -f $regFile ]]; then
-        regFile=
         echo "Could not modify or find user.reg file: \"$regFile\""
+        regFile=
         echo "Manually run: protontricks $SteamID winecfg"
         echo "In the Libraries tab, $1."
         read -rp 'Press any key to continue.'
