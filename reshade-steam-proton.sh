@@ -117,7 +117,6 @@ if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
         rm -rf "$RESHADE_PATH"/*
         mv * "$RESHADE_PATH/"
         cd "$MAIN_PATH"
-        rm -rf VERS
         echo "$RVERS" > VERS
         rm -rf "$tmpDir"
     fi
