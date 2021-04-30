@@ -34,6 +34,9 @@ LICENSE
     This will link dxgi.dll to the game using a different name, for example opengl32.dll and set a wine override for it.
     Example on a opengl game (Like Wolfenstein: The New Order): CUSTOM_OVERRIDE=opengl32 ./reshade-steam-proton.sh
     
+    By default, files are downloaded to ~/.reshade
+    You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-steam-proton.sh
+    
     Requires grep, curl, 7z, wget, protontricks.
     
     NOTE: Overriding and installing the d3dcompiler_47 dll seems to occasionally fail with proton-ge under protontricks, switch
