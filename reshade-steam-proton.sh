@@ -105,8 +105,8 @@ if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     if ! [[ $? -eq 0 ]]; then printErr "Could not fetch ReShade version."; fi
     if [[ $RVERS != $VERS ]]; then
         echo -e "Updating Reshade."
-        tmpDir=$(mktemp -d || exit 1)
-        cd "$tmpDir"
+        tmpDir=$(mktemp -d)
+        cd "$tmpDir" || printErr "Failed to create temp directory."
         wget -q https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
         exeFile="$(find . -name *.exe || exit 1)"
         if ! [[ $? -eq 0 ]]; then printErr "Download of ReShade exe file failed."; fi
