@@ -141,6 +141,7 @@ if [[ $steamid =~ ^[0-9]*$ ]]; then
         fi
         if [[ ! -e $regFile ]] || [[ $(grep -Po '^"dxgi"="native,builtin"' $regFile) == "" ]]; then
             echo -e "Could not modify or find user.reg file: \"$regFile\"\nManually run: protontricks $steamid winecfg\nIn the Libraries tab, Add dxgi.dll and d3d9.dll and make sure they are set to \"native,builtin\"."
+            read -p 'Press any key to continue.'
         fi
     fi
     if [[ ! -z $CUSTOM_OVERRIDE ]] && [[ -e $regFile ]] && [[ $(grep -Po "^\"$CUSTOM_OVERRIDE\"=\"native,builtin\"" $regFile) == "" ]]; then
