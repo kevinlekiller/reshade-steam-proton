@@ -97,7 +97,7 @@ function printErr() {
     removeTempDir
     tput setab 0
     tput setaf 1
-    echo -e "Error: $1\nExiting."
+    echo -e "\e[40m\e[31mError: $1\nExiting.\e[0m"
     tput sgr0
     [[ -z $2 ]] && exit 1 || exit "$2"
 }
@@ -196,10 +196,7 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     done
     
     echo "Finished uninstalling ReShade for '$gamePath'."
-    tput setab 0
-    tput setaf 2
-    echo "Make sure to remove or change the WINEDLLOVERRIDES environment variable."
-    tput sgr0
+    echo -e "\e[5m\e[40m\e[32mMake sure to remove or change the WINEDLLOVERRIDES environment variable.\e[0m"
     exit 0
 fi
 
@@ -298,10 +295,7 @@ ln -is "$(realpath "$MAIN_PATH"/reshade-shaders/Shaders)" "$gamePath/"
 
 echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
-tput setab 0
-tput setaf 2
-echo "If you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: $gameEnvVar %command%"
-echo "If not, run the game with this environment variable set: $gameEnvVar"
-echo "The next time you start the game, open the ReShade settings, go to the 'Settings' tab, add the Shaders folder" \
-"location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'."
-tput sgr0
+echo -e "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
+echo -e "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
+echo -e "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, add the Shaders folder" \
+"location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'.\e[0m"
