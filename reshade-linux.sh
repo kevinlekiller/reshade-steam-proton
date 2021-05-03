@@ -196,7 +196,7 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     done
     
     echo "Finished uninstalling ReShade for '$gamePath'."
-    echo -e "\e[5m\e[40m\e[32mMake sure to remove or change the WINEDLLOVERRIDES environment variable.\e[0m"
+    echo -e "\e[40m\e[32mMake sure to remove or change the \e[34mWINEDLLOVERRIDES\e[32m environment variable.\e[0m"
     exit 0
 fi
 
