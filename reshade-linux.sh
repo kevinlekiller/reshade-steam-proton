@@ -95,10 +95,7 @@ DESCRIPTION
 
 function printErr() {
     removeTempDir
-    tput setab 0
-    tput setaf 1
     echo -e "\e[40m\e[31mError: $1\nExiting.\e[0m"
-    tput sgr0
     [[ -z $2 ]] && exit 1 || exit "$2"
 }
 
