@@ -29,7 +29,13 @@ cat > /dev/null <<DESCRIPTION
         MAIN_PATH
             By default, ReShade / shader files are stored in ~/.reshade
             You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
-    
+        
+        SHADER_REPOS
+            List of git repo URI's to clone / update with reshade shaders.
+            By default this is set to : https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders
+            The format is (the branch is optional) : URI|local_repo_name|branch
+            Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
+            
     Reuirements:
         grep
         7z
@@ -41,6 +47,8 @@ cat > /dev/null <<DESCRIPTION
         You will want to respond 'n' when asked for automatic detection of the dll.
         Then you will write 'opengl32' when asked for the name of the dll to override.
         You can check on pcgamingwiki.com to see what graphic API the game uses.
+        
+        Rough order of shaders : color -> contrast/gamma/brightness -> anti aliasing -> sharpening
     
     Usage:
         Download the script
@@ -189,7 +197,7 @@ echo "Do you want to (i)nstall or (u)ninstall ReShade for a game?"
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
     echo "Unlinking ReShade files."
-    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures"
+    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures ReShade_shaders"
     for link in $LINKS; do
         if [[ -L $gamePath/$link ]]; then
             echo "Unlinking \"$gamePath/$link\"."
@@ -202,15 +210,28 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     exit 0
 fi
 
-if [[ ! -d reshade-shaders ]]; then
-    echo -e "Installing reshade shaders.\n$SEPERATOR"
-    git clone --branch master https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
-elif [[ $UPDATE_RESHADE -eq 1 ]]; then
-    echo -e "Updating reshade shaders.\n$SEPERATOR"
-    cd reshade-shaders || printErr "reshade-shaders folder missing."
-    git pull || printErr "Could not update ReShade shaders."
-    cd "$MAIN_PATH" || exit
+mkdir -p ReShade_shaders
+cd "$MAIN_PATH/ReShade_shaders" || exit
+
+SHADER_REPOS=${SHADER_REPOS:-"https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders"}
+
+if [[ -n $SHADER_REPOS ]]; then
+    for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
+        localRepoName=$(echo "$URI" | cut -d'|' -f2)
+        branchName=$(echo "$URI" | cut -d'|' -f3)
+        URI=$(echo "$URI" | cut -d'|' -f1)
+        if [[ -d $localRepoName ]]; then
+            cd "$localRepoName" || continue
+            git pull || echo "Could not update shader repo: $URI."
+            continue
+        fi
+        cd "$MAIN_PATH/ReShade_shaders" || exit
+        [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
+        eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
+    done
 fi
+
+cd "$MAIN_PATH" || exit
 
 echo "$SEPERATOR"
 mkdir -p "$RESHADE_PATH"
@@ -292,12 +313,12 @@ fi
 ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$dllArch")" "$gamePath/d3dcompiler_47.dll"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade32.json)" "$gamePath/"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
-ln -is "$(realpath "$MAIN_PATH"/reshade-shaders/Textures)" "$gamePath/"
-ln -is "$(realpath "$MAIN_PATH"/reshade-shaders/Shaders)" "$gamePath/"
+ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
 
 echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
 echo -e "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
 echo -e "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
 echo -e "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, add the Shaders folder" \
-"location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', go to the 'Home' tab, click 'Reload'.\e[0m"
+"location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths'," \
+"these folders are located inside the ReShade_shaders folder, finally go to the 'Home' tab, click 'Reload'.\e[0m"
