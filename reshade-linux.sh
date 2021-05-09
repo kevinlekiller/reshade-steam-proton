@@ -222,6 +222,7 @@ if [[ -n $SHADER_REPOS ]]; then
         URI=$(echo "$URI" | cut -d'|' -f1)
         if [[ -d "$MAIN_PATH/ReShade_shaders/$localRepoName" ]]; then
             cd "$MAIN_PATH/ReShade_shaders/$localRepoName" || continue
+            echo "Updating ReShade shader repository $URI."
             git pull || echo "Could not update shader repo: $URI."
             continue
         fi
