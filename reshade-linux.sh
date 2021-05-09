@@ -220,8 +220,8 @@ if [[ -n $SHADER_REPOS ]]; then
         localRepoName=$(echo "$URI" | cut -d'|' -f2)
         branchName=$(echo "$URI" | cut -d'|' -f3)
         URI=$(echo "$URI" | cut -d'|' -f1)
-        if [[ -d $localRepoName ]]; then
-            cd "$localRepoName" || continue
+        if [[ -d "$MAIN_PATH/ReShade_shaders/$localRepoName" ]]; then
+            cd "$MAIN_PATH/ReShade_shaders/$localRepoName" || continue
             git pull || echo "Could not update shader repo: $URI."
             continue
         fi
