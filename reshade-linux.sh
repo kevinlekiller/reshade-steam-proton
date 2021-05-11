@@ -32,9 +32,18 @@ cat > /dev/null <<DESCRIPTION
         
         SHADER_REPOS
             List of git repo URI's to clone / update with reshade shaders.
-            By default this is set to : https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders
+            By default this is set to :
+                https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders
             The format is (the branch is optional) : URI|local_repo_name|branch
             Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
+            
+        MERGE_SHADERS
+            If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
+            For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx, 
+            by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
+            The order of importance for shaders is taken from SHADER_REPOS.
+            Default is MERGE_SHADERS=1
+            To disable, set MERGE_SHADERS=0
             
     Reuirements:
         grep
@@ -192,6 +201,7 @@ mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
 cd "$MAIN_PATH" || exit
 
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
+MERGE_SHADERS=${MERGE_SHADERS:-1}
 
 echo "Do you want to (i)nstall or (u)ninstall ReShade for a game?"
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
@@ -213,7 +223,7 @@ fi
 mkdir -p ReShade_shaders
 cd "$MAIN_PATH/ReShade_shaders" || exit
 
-SHADER_REPOS=${SHADER_REPOS:-"https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders"}
+SHADER_REPOS=${SHADER_REPOS:-"https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders"}
 
 if [[ -n $SHADER_REPOS ]]; then
     for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
@@ -230,6 +240,33 @@ if [[ -n $SHADER_REPOS ]]; then
         [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
         eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
     done
+    if [[ $MERGE_SHADERS == 1 ]]; then
+        mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Shaders"
+        mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Textures"
+        for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
+            localRepoName=$(echo "$URI" | cut -d'|' -f2)
+            if [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" ]]; then
+                continue
+            fi
+            cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" || continue
+            for file in *; do
+                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]]; then
+                    continue
+                fi
+                ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
+            done
+            if [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" ]]; then
+                continue
+            fi
+            cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" || continue
+            for file in *; do
+                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Textures/$file" ]]; then
+                    continue
+                fi
+                ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Textures/"
+            done
+        done
+    fi
 fi
 
 cd "$MAIN_PATH" || exit
