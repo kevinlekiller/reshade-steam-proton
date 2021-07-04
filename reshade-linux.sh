@@ -57,7 +57,14 @@ cat > /dev/null <<DESCRIPTION
         Then you will write 'opengl32' when asked for the name of the dll to override.
         You can check on pcgamingwiki.com to see what graphic API the game uses.
         
-        Rough order of shaders : color -> contrast/gamma/brightness -> anti aliasing -> sharpening
+        Adding shader files not in a repository to the Merged/Shaders folder:
+            For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
+            Create the External_shaders folder inside the MAIN_PATH folder (by default ~/.reshade)
+            Add the shader to it: cd ~/.reshade/External_shaders && wget --output-document=CMAA2.fx https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
+            Run this script, the shader will then be linked to the Merged folder.
+        
+        When you enable shaders in Reshade, this is a rough ideal order of shaders :
+            color -> contrast/brightness/gamma -> anti-aliasing -> sharpening
     
     Usage:
         Download the script
@@ -94,7 +101,7 @@ cat > /dev/null <<DESCRIPTION
                 Select if you want it to automatically detect the correct dll file for ReShade or
                 to manually specity it.
                 
-                Set the 
+                Set the WINEDLLOVERRIDES environment variable as instructed.
                 
                 Run the game, set the Effects and Textures search paths in the ReShade settings.
             
@@ -221,6 +228,7 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
 fi
 
 mkdir -p ReShade_shaders
+mkdir -p External_shaders
 cd "$MAIN_PATH/ReShade_shaders" || exit
 
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders"}
@@ -266,6 +274,15 @@ if [[ -n $SHADER_REPOS ]]; then
                 ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Textures/"
             done
         done
+        if [[ -d "$MAIN_PATH/External_shaders" ]]; then
+            cd "$MAIN_PATH/External_shaders" || exit
+            for file in *; do
+                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]]; then
+                    continue
+                fi
+                ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
+            done
+        fi
     fi
 fi
 
