@@ -60,7 +60,7 @@ cat > /dev/null <<DESCRIPTION
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
             Create the External_shaders folder inside the MAIN_PATH folder (by default ~/.reshade)
-            Add the shader to it: cd ~/.reshade/External_shaders && wget --output-document=CMAA2.fx https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
+            Add the shader to it: cd ~/.reshade/External_shaders && wget --output-document=CMAA2.fx https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/a5f11c74ad397d58c27595863b253a7d7537c65c/CMAA2.fx
             Run this script, the shader will then be linked to the Merged folder.
         
         When you enable shaders in Reshade, this is a rough ideal order of shaders :
