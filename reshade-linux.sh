@@ -46,7 +46,7 @@ cat > /dev/null <<DESCRIPTION
             To disable, set MERGE_SHADERS=0
         
         REBUILD_MERGE
-            Set to 1 to rebuild the MERGED_SHADERS folder.
+            Set to 1 to rebuild the MERGE_SHADERS folder.
             Useful if you change SHADER_REPOS
         
     Reuirements:
