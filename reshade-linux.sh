@@ -25,7 +25,7 @@ cat > /dev/null <<DESCRIPTION
     Environment Variables:
         UPDATE_RESHADE
             To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0 ; ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
-    
+        
         MAIN_PATH
             By default, ReShade / shader files are stored in ~/.reshade
             You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
@@ -33,10 +33,10 @@ cat > /dev/null <<DESCRIPTION
         SHADER_REPOS
             List of git repo URI's to clone / update with reshade shaders.
             By default this is set to :
-                https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders
+                https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
             The format is (the branch is optional) : URI|local_repo_name|branch
             Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
-            
+        
         MERGE_SHADERS
             If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
             For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx, 
@@ -44,7 +44,11 @@ cat > /dev/null <<DESCRIPTION
             The order of importance for shaders is taken from SHADER_REPOS.
             Default is MERGE_SHADERS=1
             To disable, set MERGE_SHADERS=0
-            
+        
+        REBUILD_MERGE
+            Set to 1 to rebuild the MERGED_SHADERS folder.
+            Useful if you change SHADER_REPOS
+        
     Reuirements:
         grep
         7z
@@ -231,7 +235,7 @@ mkdir -p ReShade_shaders
 mkdir -p External_shaders
 cd "$MAIN_PATH/ReShade_shaders" || exit
 
-SHADER_REPOS=${SHADER_REPOS:-"https://github.com/crosire/reshade-shaders|reshade-shaders|master;https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders"}
+SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
 
 if [[ -n $SHADER_REPOS ]]; then
     for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
@@ -249,6 +253,9 @@ if [[ -n $SHADER_REPOS ]]; then
         eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
     done
     if [[ $MERGE_SHADERS == 1 ]]; then
+        if [[ $REBUILD_MERGE == 1 ]]; then
+            rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
+        fi
         mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Shaders"
         mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Textures"
         for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
