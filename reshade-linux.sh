@@ -49,7 +49,7 @@ cat > /dev/null <<DESCRIPTION
             Set to 1 to rebuild the MERGE_SHADERS folder.
             Useful if you change SHADER_REPOS
         
-    Reuirements:
+    Requirements:
         grep
         7z
         wget
