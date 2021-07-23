@@ -60,6 +60,9 @@ cat > /dev/null <<DESCRIPTION
         You will want to respond 'n' when asked for automatic detection of the dll.
         Then you will write 'opengl32' when asked for the name of the dll to override.
         You can check on pcgamingwiki.com to see what graphic API the game uses.
+
+        Some games like Leisure Suit Larry: Wet Dreams Don't Dry have a 32 bit exe but use Direct3D 11,
+        you'll have to manually specify the architecture (32) and DLL name (dxgi).
         
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
@@ -328,12 +331,12 @@ fi
 
 getGamePath
 
-echo "Do you want $0 to attempt to automatically detect the right dll to use for ReShade?"
+echo "Do you want $0 to attempt to automatically detect the right dll files to use for ReShade?"
 
 [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && wantedDll="auto" || wantedDll="manual"
 
+exeArch=32
 if [[ $wantedDll == "auto" ]]; then
-    exeArch=32
     for file in "$gamePath/"*.exe; do
         if [[ $(file "$file") =~ x86-64 ]]; then
             exeArch=64
@@ -344,6 +347,11 @@ if [[ $wantedDll == "auto" ]]; then
     echo "We have detected the game is $exeArch bits, we will use $wantedDll.dll as the override, is this correct?"
     if [[ $(checkStdin "(y/n) " "^(y|n)$") == "n" ]]; then
         wantedDll="manual"
+    fi
+else
+    echo "Specify if the game's EXE file is 32 or 64 bits:"
+    if [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]]; then
+        exeArch=64
     fi
 fi
 
@@ -360,19 +368,19 @@ if [[ $wantedDll == "manual" ]]; then
     done
 fi
 
-[[ $wantedDll == "d3d9" ]] && dllArch=32 || dllArch=64
-downloadD3dcompiler_47 "$dllArch"
+downloadD3dcompiler_47 "$exeArch"
 
 echo "Linking ReShade files to game directory."
 
-if [[ $wantedDll == "d3d9" ]]; then
-    ln -is "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$gamePath/"
+if [[ $exeArch == 32 ]]; then
+    echo "Linking d3d9.dll to $wantedDll.dll."
+    ln -is "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$gamePath/$wantedDll.dll"
 else
-    echo "Linking dxgi.dll as $wantedDll.dll."
+    echo "Linking dxgi.dll to $wantedDll.dll."
     ln -is "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$gamePath/$wantedDll.dll"
 fi
 
-ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$dllArch")" "$gamePath/d3dcompiler_47.dll"
+ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$exeArch")" "$gamePath/d3dcompiler_47.dll"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade32.json)" "$gamePath/"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
 ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
