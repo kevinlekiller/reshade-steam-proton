@@ -375,6 +375,9 @@ downloadD3dcompiler_47 "$exeArch"
 
 echo "Linking ReShade files to game directory."
 
+if [[ -L $gamePath/$wantedDll.dll ]]; then
+    unlink "$gamePath/$wantedDll.dll"
+fi
 if [[ $exeArch == 32 ]]; then
     echo "Linking d3d9.dll to $wantedDll.dll."
     ln -is "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$gamePath/$wantedDll.dll"
@@ -383,6 +386,9 @@ else
     ln -is "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$gamePath/$wantedDll.dll"
 fi
 
+if [[ -L $gamePath/d3dcompiler_47.dll ]]; then
+    unlink "$gamePath/d3dcompiler_47.dll"
+fi
 ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$exeArch")" "$gamePath/d3dcompiler_47.dll"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade32.json)" "$gamePath/"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
