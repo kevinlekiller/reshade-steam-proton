@@ -33,7 +33,7 @@ cat > /dev/null <<DESCRIPTION
         SHADER_REPOS
             List of git repo URI's to clone / update with reshade shaders.
             By default this is set to :
-                https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
+                https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
             The format is (the branch is optional) : URI|local_repo_name|branch
             Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
         
@@ -238,7 +238,7 @@ mkdir -p ReShade_shaders
 mkdir -p External_shaders
 cd "$MAIN_PATH/ReShade_shaders" || exit
 
-SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
+SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
 
 if [[ -n $SHADER_REPOS ]]; then
     for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
