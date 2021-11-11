@@ -48,6 +48,15 @@ cat > /dev/null <<DESCRIPTION
         REBUILD_MERGE
             Set to 1 to rebuild the MERGE_SHADERS folder.
             Useful if you change SHADER_REPOS
+
+        GLOBAL_INI
+            By default, the script will link a ReShade.ini file to the game's path.
+            The ReShade.ini is stored in the MAIN_PATH folder.
+            If you have disabled MERGE_SHADERS, you will need to manually edit the paths in ReShade.ini
+            You can disable GLOBAL_INI with : GLOBAL_INI=0
+            Disabling this will cause ReShade to create a ReShade.ini file when the game starts.
+            You can use a different ReShade.ini (put them in the MAIN_PATH folder) by
+            passing the name in the variable: GLOBAL_INI="ReShade2.ini"
         
     Requirements:
         grep
@@ -394,10 +403,24 @@ ln -is "$(realpath "$RESHADE_PATH"/ReShade32.json)" "$gamePath/"
 ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
 ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
 
+GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
+if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
+    if [[ -L $gamePath/$GLOBAL_INI ]]; then
+        unlink "$gamePath/$GLOBAL_INI"
+    fi
+    sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
+    if [[ $MERGE_SHADERS == 1 ]]; then
+        TMP_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
+        sed -i "s#_SHADSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Shaders#g" "$MAIN_PATH/$GLOBAL_INI"
+        sed -i "s#_TEXSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Textures#g" "$MAIN_PATH/$GLOBAL_INI"
+    fi
+    ln -is "$(realpath "$MAIN_PATH/$GLOBAL_INI")" "$gamePath/$GLOBAL_INI"
+fi
+
 echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
 echo -e "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
 echo -e "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
 echo -e "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, add the Shaders folder" \
-"location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths'," \
-"these folders are located inside the ReShade_shaders folder, finally go to the 'Home' tab, click 'Reload'.\e[0m"
+        "location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths'," \
+        "these folders are located inside the ReShade_shaders folder, finally go to the 'Home' tab, click 'Reload'.\e[0m"
