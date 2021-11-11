@@ -404,6 +404,10 @@ ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
 ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
 
 GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
+if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
+    cd "$MAIN_PATH" || exit
+    wget https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
+fi
 if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
     if [[ -L $gamePath/$GLOBAL_INI ]]; then
         unlink "$gamePath/$GLOBAL_INI"
