@@ -407,16 +407,18 @@ GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
     cd "$MAIN_PATH" || exit
     wget https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
+    if [[ -f ReShade.ini ]]; then
+        sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
+        if [[ $MERGE_SHADERS == 1 ]]; then
+            TMP_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
+            sed -i "s#_SHADSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Shaders#g" "$MAIN_PATH/$GLOBAL_INI"
+            sed -i "s#_TEXSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Textures#g" "$MAIN_PATH/$GLOBAL_INI"
+        fi
+    fi
 fi
 if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
     if [[ -L $gamePath/$GLOBAL_INI ]]; then
         unlink "$gamePath/$GLOBAL_INI"
-    fi
-    sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
-    if [[ $MERGE_SHADERS == 1 ]]; then
-        TMP_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
-        sed -i "s#_SHADSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Shaders#g" "$MAIN_PATH/$GLOBAL_INI"
-        sed -i "s#_TEXSED_#$TMP_PATH\\\ReShade_shaders\\\Merged\\\Textures#g" "$MAIN_PATH/$GLOBAL_INI"
     fi
     ln -is "$(realpath "$MAIN_PATH/$GLOBAL_INI")" "$gamePath/$GLOBAL_INI"
 fi
