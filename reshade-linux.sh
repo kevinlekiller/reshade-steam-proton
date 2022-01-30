@@ -1,17 +1,17 @@
 #!/bin/bash
 cat > /dev/null <<LICENSE
     Copyright (C) 2021  kevinlekiller
-    
+
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
     of the License, or (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -21,30 +21,30 @@ cat > /dev/null <<DESCRIPTION
     Bash script to download ReShade and the shaders and link them to games using wine or proton on Linux.
     By linking, we can re-run this script and all the games automatically get the newest ReShade and
     shader versions.
-    
+
     Environment Variables:
         UPDATE_RESHADE
             To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0 ; ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
-        
+
         MAIN_PATH
             By default, ReShade / shader files are stored in ~/.reshade
             You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
-        
+
         SHADER_REPOS
             List of git repo URI's to clone / update with reshade shaders.
             By default this is set to :
                 https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
             The format is (the branch is optional) : URI|local_repo_name|branch
             Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
-        
+
         MERGE_SHADERS
             If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
-            For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx, 
+            For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx,
             by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
             The order of importance for shaders is taken from SHADER_REPOS.
             Default is MERGE_SHADERS=1
             To disable, set MERGE_SHADERS=0
-        
+
         REBUILD_MERGE
             Set to 1 to rebuild the MERGE_SHADERS folder.
             Useful if you change SHADER_REPOS
@@ -57,19 +57,28 @@ cat > /dev/null <<DESCRIPTION
             Disabling this will cause ReShade to create a ReShade.ini file when the game starts.
             You can use a different ReShade.ini (put them in the MAIN_PATH folder) by
             passing the name in the variable: GLOBAL_INI="ReShade2.ini"
-        
+
+        VULKAN_SUPPORT
+            As noted below, Vulkan / ReShade is not currently functional under wine.
+            The script contains a function to enable ReShade under Vulkan, although it's disabled
+            by default since it's currently not functional, you can enable this function by
+            passing VULKAN_SUPPORT=1
+
     Requirements:
         grep
         7z
         wget
         git
         wine (If the game uses Vulkan.)
-    
+
     Notes:
-        Vulkan games like Doom (2016) : When asked if the game uses the Vulkan API, type y.
-        Tell the script if the executable is 32 bit or 64 bit (by using the file command on the exe file or check on https://www.pcgamingwiki.com)
-        Provide the WINEPREFIX to the script, for Steam games, the WINEPREFIX's folder name is the App ID and is stored in ~/.local/share/Steam/steamapps/compatdata/
-        For example, on Doom (2016) on Steam, the WINEPREFIX is ~/.local/share/Steam/steamapps/compatdata/379720
+        Vulkan / ReShade currently is not functional under wine.
+        It might become possible in the future, so this information is provided in the event that happens.
+        See https://github.com/kevinlekiller/reshade-steam-proton/issues/6
+            Vulkan games like Doom (2016) : When asked if the game uses the Vulkan API, type y.
+            Tell the script if the executable is 32 bit or 64 bit (by using the file command on the exe file or check on https://www.pcgamingwiki.com)
+            Provide the WINEPREFIX to the script, for Steam games, the WINEPREFIX's folder name is the App ID and is stored in ~/.local/share/Steam/steamapps/compatdata/
+            For example, on Doom (2016) on Steam, the WINEPREFIX is ~/.local/share/Steam/steamapps/compatdata/379720
 
         OpenGL games like Wolfenstein: The New Order, require the dll to be named opengl32.dll
         You will want to respond 'n' when asked for automatic detection of the dll.
@@ -78,16 +87,16 @@ cat > /dev/null <<DESCRIPTION
 
         Some games like Leisure Suit Larry: Wet Dreams Don't Dry have a 32 bit exe but use Direct3D 11,
         you'll have to manually specify the architecture (32) and DLL name (dxgi).
-        
+
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
             Create the External_shaders folder inside the MAIN_PATH folder (by default ~/.reshade)
             Add the shader to it: cd ~/.reshade/External_shaders && wget https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
             Run this script, the shader will then be linked to the Merged folder.
-        
+
         When you enable shaders in Reshade, this is a rough ideal order of shaders :
             color -> contrast/brightness/gamma -> anti-aliasing -> sharpening
-    
+
     Usage:
         Download the script
             Using wget:
@@ -99,43 +108,43 @@ cat > /dev/null <<DESCRIPTION
             chmod u+x reshade-linux.sh
         Run it:
             ./reshade-linux.sh
-        
+
         Installing ReShade for a DirectX / OpenGL game:
             Example on Back To The Future Episode 1:
-                
+
                 Find the game directory where the .exe file is.
                     If using Steam, you can open the Steam client, right click the game, click Properties,
                     click Local Files, clicking Browse, find the directory with the main
                     exe file, copy it, supply it to the script.
-                    
+
                     Or you can run : find ~/.local -iname 'Back to the future*'
                     Then run : ls "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1"
                     We see BackToTheFuture101.exe is in this directory.
-                
+
                 Run this script: ./reshade-linux.sh
 
                 Type n when asked if the game uses the Vulkan API.
-                
+
                 Type i to install ReShade.
                     If you have never run this script, the shaders and ReShade will be downloaded.
-                
+
                 Supply the game directory where exe file is, when asked:
                     /home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1
-                
+
                 Select if you want it to automatically detect the correct dll file for ReShade or
                 to manually specity it.
-                
+
                 Set the WINEDLLOVERRIDES environment variable as instructed.
-                
+
                 Run the game, set the Effects and Textures search paths in the ReShade settings if required.
-            
+
         Uninstalling ReShade for a DirectX /OpenGL game:
             Run this script: ./reshade-linux.sh
 
             Type n when asked if the game uses the Vulkan API.
-            
+
             Type u to uninstall ReShade.
-            
+
             Supply the game path where the .exe file is (see instructions above).
 
         Installing ReShade for a Vulkan game:
@@ -156,7 +165,7 @@ cat > /dev/null <<DESCRIPTION
                 x86-64 is 64 bits, Intel 80386 would be 32 bits.
 
                 Type i when asked if you want to install ReShade.
-            
+
         Uninstall ReShade for a Vulkan game:
                 Run this script ./reshade-linux.sh
 
@@ -194,12 +203,12 @@ function getGamePath() {
         read -rp 'Game path: ' gamePath
         eval gamePath="$gamePath"
         gamePath=$(realpath "$gamePath")
-        
+
         if ! ls "$gamePath" > /dev/null 2>&1 || [[ -z $gamePath ]]; then
             echo "Incorrect or empty path supplied. You supplied \"$gamePath\"."
             continue
         fi
-        
+
         if ! ls "$gamePath/"*.exe > /dev/null 2>&1; then
             echo "No .exe file found in \"$gamePath\"."
             echo "Do you still want to use this directory?"
@@ -207,7 +216,7 @@ function getGamePath() {
                 continue
             fi
         fi
-        
+
         echo "Is this path correct? \"$gamePath\""
         if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
             break
@@ -359,41 +368,45 @@ if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
 fi
 
 WINE_MAIN_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
-echo "Does the game use the Vulkan API?"
-if [[ $(checkStdin "(y/n): " "^(y|n)$") == "y" ]]; then
-    echo 'Supply the WINEPREFIX path for the game.'
-    echo '(Control+c to exit)'
-    while true; do
-        read -rp 'WINEPREFIX path: ' WINEPREFIX
-        eval WINEPREFIX="$WINEPREFIX"
-        WINEPREFIX=$(realpath "$WINEPREFIX")
 
-        if ! ls "$WINEPREFIX" > /dev/null 2>&1 || [[ -z $WINEPREFIX ]]; then
-            echo "Incorrect or empty path supplied. You supplied \"$WINEPREFIX\"."
-            continue
+VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
+if [[ $VULKAN_SUPPORT == 1 ]]; then
+    echo "Does the game use the Vulkan API?"
+    if [[ $(checkStdin "(y/n): " "^(y|n)$") == "y" ]]; then
+        echo 'Supply the WINEPREFIX path for the game.'
+        echo '(Control+c to exit)'
+        while true; do
+            read -rp 'WINEPREFIX path: ' WINEPREFIX
+            eval WINEPREFIX="$WINEPREFIX"
+            WINEPREFIX=$(realpath "$WINEPREFIX")
+
+            if ! ls "$WINEPREFIX" > /dev/null 2>&1 || [[ -z $WINEPREFIX ]]; then
+                echo "Incorrect or empty path supplied. You supplied \"$WINEPREFIX\"."
+                continue
+            fi
+            echo "Is this path correct? \"$WINEPREFIX\""
+            if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
+                break
+            fi
+        done
+        echo "Specify if the game's EXE file architecture is 32 or 64 bits:"
+        [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64 || exeArch=32
+        export WINEPREFIX="$WINEPREFIX"
+        echo "Do you want to (i)nstall or (u)ninstall ReShade?"
+        if [[ $(checkStdin "(i/u): " "^(i|u)$") == "i" ]]; then
+            wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\ReShade$exeArch.json" -f /reg:$exeArch
+        else
+            wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:$exeArch
         fi
-        echo "Is this path correct? \"$WINEPREFIX\""
-        if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
-            break
+        [[ $? == 0 ]] && echo "Done." || echo "An error has occured."
+        if [[ ! -f $RESHADE_PATH/ReShade64.dll ]]; then
+            cp -f "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$RESHADE_PATH/ReShade64.dll"
         fi
-    done
-    echo "Specify if the game's EXE file architecture is 32 or 64 bits:"
-    [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64 || exeArch=32
-    export WINEPREFIX="$WINEPREFIX"
-    echo "Do you want to (i)nstall or (u)ninstall ReShade?"
-    if [[ $(checkStdin "(i/u): " "^(i|u)$") == "i" ]]; then
-        wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\ReShade$exeArch.json" -f /reg:$exeArch
-    else
-        wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:$exeArch
+        if [[ ! -f $RESHADE_PATH/ReShade32.dll ]]; then
+            cp -f "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$RESHADE_PATH/ReShade32.dll"
+        fi
+        exit 0
     fi
-    [[ $? == 0 ]] && echo "Done." || echo "An error has occured."
-    if [[ ! -f $RESHADE_PATH/ReShade64.dll ]]; then
-        cp -f "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$RESHADE_PATH/ReShade64.dll"
-    fi
-    if [[ ! -f $RESHADE_PATH/ReShade32.dll ]]; then
-        cp -f "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$RESHADE_PATH/ReShade32.dll"
-    fi
-    exit 0
 fi
 
 echo "Do you want to (i)nstall or (u)ninstall ReShade for a DirectX or OpenGL game?"
