@@ -67,7 +67,7 @@ cat > /dev/null <<DESCRIPTION
     Requirements:
         grep
         7z
-        wget
+        curl
         git
         wine (If the game uses Vulkan.)
 
@@ -91,7 +91,7 @@ cat > /dev/null <<DESCRIPTION
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
             Create the External_shaders folder inside the MAIN_PATH folder (by default ~/.reshade)
-            Add the shader to it: cd ~/.reshade/External_shaders && wget https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
+            Add the shader to it: cd ~/.reshade/External_shaders && curl -O https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
             Run this script, the shader will then be linked to the Merged folder.
 
         When you enable shaders in Reshade, this is a rough ideal order of shaders :
@@ -99,8 +99,8 @@ cat > /dev/null <<DESCRIPTION
 
     Usage:
         Download the script
-            Using wget:
-                wget https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-linux.sh
+            Using curl:
+                curl -O https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-linux.sh
             Using git:
                 git clone https://github.com/kevinlekiller/reshade-steam-proton
                 cd reshade-steam-proton
@@ -246,7 +246,7 @@ function downloadD3dcompiler_47() {
     echo "Downloading d3dcompiler_47.dll for $1 bits."
     createTempDir
     # Based on https://github.com/Winetricks/winetricks/commit/bc5c57d0d6d2c30642efaa7fee66b60f6af3e133
-    wget -q "https://download-installer.cdn.mozilla.net/pub/firefox/releases/62.0.3/win$1/ach/Firefox%20Setup%2062.0.3.exe" \
+    curl -sO "https://download-installer.cdn.mozilla.net/pub/firefox/releases/62.0.3/win$1/ach/Firefox%20Setup%2062.0.3.exe" \
         || echo "Could not download Firefox setup file (which contains d3dcompiler_47.dll)"
     [[ $1 -eq 32 ]] && hash="d6edb4ff0a713f417ebd19baedfe07527c6e45e84a6c73ed8c66a33377cc0aca" || hash="721977f36c008af2b637aedd3f1b529f3cfed6feb10f68ebe17469acb1934986"
     ffhash=$(sha256sum Firefox*.exe | cut -d\  -f1)
@@ -343,14 +343,14 @@ mkdir -p "$RESHADE_PATH"
 
 if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RVERS=$(wget -qO - https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe")
     if [[ $RVERS == "" ]]; then
         printErr "Could not fetch ReShade version."
     fi
     if [[ $RVERS != "$VERS" ]]; then
         echo -e "Updating Reshade."
         createTempDir
-        wget  https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
+        curl -sO  https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
         exeFile="$(find . -name "*.exe")"
         if ! [[ -f $exeFile ]]; then
             printErr "Download of ReShade exe file failed."
@@ -495,7 +495,7 @@ ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
 GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
     cd "$MAIN_PATH" || exit
-    wget https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
+    curl -sO https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
     if [[ -f ReShade.ini ]]; then
         sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
         if [[ $MERGE_SHADERS == 1 ]]; then
