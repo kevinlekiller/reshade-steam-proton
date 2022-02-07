@@ -273,6 +273,12 @@ cd "$MAIN_PATH" || exit
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
 MERGE_SHADERS=${MERGE_SHADERS:-1}
 
+# Skip updating shaders / reshade if recently done (4 hours).
+[[ -f LASTUPDATED ]] && LASTUPDATED=$(cat LASTUPDATED) || LASTUPDATED=0
+[[ ! $LASTUPDATED =~ ^[0-9]+$ ]] && LASTUPDATED=0
+[[ $LASTUPDATED -gt 0 && $(($(date +%s)-$LASTUPDATED)) -lt 14400 ]] && UPDATE_RESHADE=0
+[[ $UPDATE_RESHADE == 1 ]] && date +%s > LASTUPDATED
+
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
 
 if [[ -n $SHADER_REPOS ]]; then
