@@ -295,6 +295,7 @@ if [[ -n $SHADER_REPOS ]]; then
             git pull || echo "Could not update shader repo: $URI."
             continue
         fi
+        mkdir -p "$MAIN_PATH/ReShade_shaders"
         cd "$MAIN_PATH/ReShade_shaders" || exit
         [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
         eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
