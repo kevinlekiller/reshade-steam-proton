@@ -300,9 +300,10 @@ mkdir -p "$MAIN_PATH/External_shaders"
 echo -e "$SEPERATOR\nReShade installer/updater for Linux games using wine or proton.\n$SEPERATOR\n"
 
 # Z0003
-# TODO Combine the MERGE_SHADERS loop inside of the first loop.
 if [[ -n $SHADER_REPOS ]]; then
     echo "Checking for ReShade Shader updates."
+    [[ $REBUILD_MERGE == 1 ]] && rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
+    [[ $MERGE_SHADERS == 1 ]] && mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Shaders" &&  mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Textures"
     for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
         localRepoName=$(echo "$URI" | cut -d'|' -f2)
         branchName=$(echo "$URI" | cut -d'|' -f3)
@@ -312,38 +313,30 @@ if [[ -n $SHADER_REPOS ]]; then
             cd "$MAIN_PATH/ReShade_shaders/$localRepoName" || continue
             echo "Updating ReShade shader repository $URI."
             git pull || echo "Could not update shader repo: $URI."
-            continue
+        else
+            cd "$MAIN_PATH/ReShade_shaders" || exit
+            [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
+            eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
         fi
-        cd "$MAIN_PATH/ReShade_shaders" || exit
-        [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
-        eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
+        if [[ $MERGE_SHADERS == 1 ]]; then
+            for dirName in Shaders Textures; do
+                [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName" ]] && continue
+                cd "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName" || continue
+                for file in *; do
+                    [[ ! -f $file ]] && continue
+                    [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$file" ]] && continue
+                    ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/"
+                done
+            done
+        fi
     done
-    if [[ $MERGE_SHADERS == 1 ]]; then
-        [[ $REBUILD_MERGE == 1 ]] && rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
-        mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Shaders"
-        mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Textures"
-        for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
-            localRepoName=$(echo "$URI" | cut -d'|' -f2)
-            [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" ]] && continue
-            cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" || continue
-            for file in *; do
-                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
-                ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
-            done
-            [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" ]] && continue
-            cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" || continue
-            for file in *; do
-                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Textures/$file" ]] && continue
-                ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Textures/"
-            done
+    if [[ $MERGE_SHADERS == 1 ]] && [[ -d "$MAIN_PATH/External_shaders" ]]; then
+        cd "$MAIN_PATH/External_shaders" || exit
+        for file in *; do
+            [[ ! -f $file ]] && continue
+            [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
+            ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
         done
-        if [[ -d "$MAIN_PATH/External_shaders" ]]; then
-            cd "$MAIN_PATH/External_shaders" || exit
-            for file in *; do
-                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
-                ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
-            done
-        fi
     fi
 fi
 echo "$SEPERATOR"
