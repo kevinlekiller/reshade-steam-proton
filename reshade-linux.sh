@@ -1,6 +1,6 @@
 #!/bin/bash
 cat > /dev/null <<LICENSE
-    Copyright (C) 2021  kevinlekiller
+    Copyright (C) 2021-2022  kevinlekiller
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
@@ -18,20 +18,21 @@ cat > /dev/null <<LICENSE
     https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 LICENSE
 cat > /dev/null <<DESCRIPTION
-    Bash script to download ReShade and the shaders and link them to games using wine or proton on Linux.
-    By linking, we can re-run this script and all the games automatically get the newest ReShade and
-    shader versions.
+    Bash script to download ReShade and ReShade shaders then links them to a game directory for games using Wine or Proton on Linux.
+    By linking, re-running this script will update ReShade / shaders for all games.
 
     Environment Variables:
         UPDATE_RESHADE
-            To skip checking for ReShade / shader updates, set UPDATE_RESHADE=0 ; ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
+            To skip checking for ReShade and shader updates, set UPDATE_RESHADE=0
+            ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
 
         MAIN_PATH
-            By default, ReShade / shader files are stored in ~/.reshade
-            You can override this by setting the MAIN_PATH variable, for example: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
+            By default, this script stores all it's files, inlcuding ReShade and the shaders in XDG_DATA_HOME/reshade ($HOME/.local/share/reshade)
+            You can override this by setting the MAIN_PATH variable.
+            ex.: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
 
         SHADER_REPOS
-            List of git repo URI's to clone / update with reshade shaders.
+            List of git repo URI's to clone or update which contain reshade shaders.
             By default this is set to :
                 https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
             The format is (the branch is optional) : URI|local_repo_name|branch
@@ -40,36 +41,42 @@ cat > /dev/null <<DESCRIPTION
         MERGE_SHADERS
             If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
             For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx,
-            by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
+              by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
             The order of importance for shaders is taken from SHADER_REPOS.
-            Default is MERGE_SHADERS=1
+            The default is MERGE_SHADERS=1
             To disable, set MERGE_SHADERS=0
 
         REBUILD_MERGE
-            Set to 1 to rebuild the MERGE_SHADERS folder.
-            Useful if you change SHADER_REPOS
+            Set to REBUILD_MERGE to 1 to rebuild the MERGE_SHADERS folder.
+            This is useful if you have changed SHADER_REPOS
+            ex.: REBUILD_MERGE=1 SHADER_REPOS="https://github.com/martymcmodding/qUINT|martymc-shaders" ./reshade-linux.sh
 
         GLOBAL_INI
-            By default, the script will link a ReShade.ini file to the game's path.
-            The ReShade.ini is stored in the MAIN_PATH folder.
-            If you have disabled MERGE_SHADERS, you will need to manually edit the paths in ReShade.ini
+            With the default, GLOBAL_INI=1, the script will create a ReShade.ini file and store it
+              in MAIN_PATH folder if it does not exist.
+            The script will link this ReShade.ini file to the game's path.
+            If you have disabled MERGE_SHADERS, you will need to manually edit the paths by editing
+              this ReShade.ini file. Alternatively, when ReShade launches, you can change the paths in the GUI.
             You can disable GLOBAL_INI with : GLOBAL_INI=0
-            Disabling this will cause ReShade to create a ReShade.ini file when the game starts.
-            You can use a different ReShade.ini (put them in the MAIN_PATH folder) by
-            passing the name in the variable: GLOBAL_INI="ReShade2.ini"
+            Disabling GLOBAL_INI will cause ReShade to create a ReShade.ini file when the game starts,
+              you will then need to manually configure ReShade when the game starts.
+            You can also use a different ReShade.ini than the one that is created by this script,
+              put it in the MAIN_PATH folder, then set GLOBAL_INI to the name of the
+              file, for example : GLOBAL_INI="ReShade2.ini" ./reshade-linux.sh
 
         VULKAN_SUPPORT
             As noted below, Vulkan / ReShade is not currently functional under wine.
             The script contains a function to enable ReShade under Vulkan, although it's disabled
             by default since it's currently not functional, you can enable this function by
             passing VULKAN_SUPPORT=1
+            ex.: VULKAN_SUPPORT=1 ./reshade-linux.sh
 
     Requirements:
-        grep
-        7z
-        curl
-        git
-        wine (If the game uses Vulkan.)
+        grep   : Used in various parts of the script. Uses the --perl-regexp option (not available on bsd).
+        7z     : Used to extract exe files
+        curl   : Used to download files.
+        git    : Used to clone ReShade shader repositories.
+        wine   : If the game uses Vulkan.
 
     Notes:
         Vulkan / ReShade currently is not functional under wine.
@@ -90,8 +97,8 @@ cat > /dev/null <<DESCRIPTION
 
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
-            Create the External_shaders folder inside the MAIN_PATH folder (by default ~/.reshade)
-            Add the shader to it: cd ~/.reshade/External_shaders && curl -O https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
+            Create the External_shaders folder inside the MAIN_PATH folder (by default $HOME/.local/share/reshade)
+            Add the shader to it: cd "$HOME/.local/share/reshade/External_shaders" && curl -LO https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
             Run this script, the shader will then be linked to the Merged folder.
 
         When you enable shaders in Reshade, this is a rough ideal order of shaders :
@@ -100,7 +107,7 @@ cat > /dev/null <<DESCRIPTION
     Usage:
         Download the script
             Using curl:
-                curl -O https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-linux.sh
+                curl -LO https://github.com/kevinlekiller/reshade-steam-proton/raw/main/reshade-linux.sh
             Using git:
                 git clone https://github.com/kevinlekiller/reshade-steam-proton
                 cd reshade-steam-proton
@@ -117,9 +124,9 @@ cat > /dev/null <<DESCRIPTION
                     click Local Files, clicking Browse, find the directory with the main
                     exe file, copy it, supply it to the script.
 
-                    Or you can run : find ~/.local -iname 'Back to the future*'
+                    Or you can run : find ~/.local/share/Steam/steamapps/common -iregex ".*Back to the future.*.exe$"
                     Then run : ls "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1"
-                    We see BackToTheFuture101.exe is in this directory.
+                    We see BackToTheFuture101.exe is in "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1/"
 
                 Run this script: ./reshade-linux.sh
 
@@ -132,7 +139,7 @@ cat > /dev/null <<DESCRIPTION
                     /home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1
 
                 Select if you want it to automatically detect the correct dll file for ReShade or
-                to manually specity it.
+                  to manually specity it.
 
                 Set the WINEDLLOVERRIDES environment variable as instructed.
 
@@ -176,16 +183,22 @@ cat > /dev/null <<DESCRIPTION
                 Type u to uninstall ReShade.
 
         Removing ReShade / shader files:
-            By default the files are stored in ~/.reshade
-            Run: rm -rf ~/.reshade
+            By default the files are stored in $HOME/.local/share/reshade
+            Run: rm -rf "$HOME/.local/share/reshade"
 DESCRIPTION
 
+# Print error and exit
+# $1 is message
+# $2 is exit code
 function printErr() {
     removeTempDir
     echo -e "\e[40m\e[31mError: $1\nExiting.\e[0m"
     [[ -z $2 ]] && exit 1 || exit "$2"
 }
 
+# Check user input
+# $1 is valid values to display to user
+# $2 is regex
 function checkStdin() {
     while true; do
         read -rp "$1" userInput
@@ -196,6 +209,7 @@ function checkStdin() {
     echo "$userInput"
 }
 
+# Try to get game directory from user.
 function getGamePath() {
     echo 'Supply the folder path where the main executable (exe file) for the game is.'
     echo '(Control+c to exit)'
@@ -203,168 +217,153 @@ function getGamePath() {
         read -rp 'Game path: ' gamePath
         eval gamePath="$gamePath"
         gamePath=$(realpath "$gamePath")
-
+        [[ -f $gamePath ]] && gamePath=$(dirname "$gamePath")
         if ! ls "$gamePath" > /dev/null 2>&1 || [[ -z $gamePath ]]; then
             echo "Incorrect or empty path supplied. You supplied \"$gamePath\"."
             continue
         fi
-
         if ! ls "$gamePath/"*.exe > /dev/null 2>&1; then
             echo "No .exe file found in \"$gamePath\"."
             echo "Do you still want to use this directory?"
-            if [[ $(checkStdin "(y/n) " "^(y|n)$") != "y" ]]; then
-                continue
-            fi
+            [[ $(checkStdin "(y/n) " "^(y|n)$") != "y" ]] && continue
         fi
-
         echo "Is this path correct? \"$gamePath\""
-        if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
-            break
-        fi
+        [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && break
     done
 }
 
+# Remove / create temporary directory.
 function createTempDir() {
     tmpDir=$(mktemp -d)
     cd "$tmpDir" || printErr "Failed to create temp directory."
 }
-
 function removeTempDir() {
     cd "$MAIN_PATH" || exit
-    if [[ -d $tmpDir ]]; then
-        rm -rf "$tmpDir"
-    fi
+    [[ -d $tmpDir ]] && rm -rf "$tmpDir"
 }
 
+# Downloads d3dcompiler_47.dll files.
 function downloadD3dcompiler_47() {
-    if ! [[ $1 =~ ^(32|64)$ ]]; then
-        printErr "(downloadD3dcompiler_47): Wrong system architecture."
-    fi
-    if [[ -f $MAIN_PATH/d3dcompiler_47.dll.$1 ]]; then
-        return
-    fi
+    ! [[ $1 =~ ^(32|64)$ ]] && printErr "(downloadD3dcompiler_47): Wrong system architecture."
+    [[ -f $MAIN_PATH/d3dcompiler_47.dll.$1 ]] && return
     echo "Downloading d3dcompiler_47.dll for $1 bits."
     createTempDir
     # Based on https://github.com/Winetricks/winetricks/commit/bc5c57d0d6d2c30642efaa7fee66b60f6af3e133
-    curl -sO "https://download-installer.cdn.mozilla.net/pub/firefox/releases/62.0.3/win$1/ach/Firefox%20Setup%2062.0.3.exe" \
+    curl -sLO "https://download-installer.cdn.mozilla.net/pub/firefox/releases/62.0.3/win$1/ach/Firefox%20Setup%2062.0.3.exe" \
         || echo "Could not download Firefox setup file (which contains d3dcompiler_47.dll)"
     [[ $1 -eq 32 ]] && hash="d6edb4ff0a713f417ebd19baedfe07527c6e45e84a6c73ed8c66a33377cc0aca" || hash="721977f36c008af2b637aedd3f1b529f3cfed6feb10f68ebe17469acb1934986"
     ffhash=$(sha256sum Firefox*.exe | cut -d\  -f1)
-    if [[ "$ffhash" != "$hash" ]]; then
-        printErr "(downloadD3dcompiler_47) Firefox integrity check failed. (Expected: $hash ; Calculated: $ffhash)"
-    fi
+    [[ "$ffhash" != "$hash" ]] && printErr "(downloadD3dcompiler_47) Firefox integrity check failed. (Expected: $hash ; Calculated: $ffhash)"
     7z -y e Firefox*.exe 1> /dev/null || printErr "(dowloadD3dcompiler_47) Failed to extract Firefox using 7z."
     cp d3dcompiler_47.dll "$MAIN_PATH/d3dcompiler_47.dll.$1" || printErr "(downloadD3dcompiler_47): Unable to find d3dcompiler_47.dll"
     removeTempDir
 }
 
 SEPERATOR="------------------------------------------------------------------------------------------------"
-
 COMMON_OVERRIDES="d3d8 d3d9 d3d11 ddraw dinput8 dxgi opengl32"
-
-echo -e "$SEPERATOR\nReShade installer/updater for Linux games using wine or proton.\n$SEPERATOR\n"
-
-MAIN_PATH=${MAIN_PATH:-~/".reshade"}
+MAIN_PATH=${MAIN_PATH:-"$HOME/.local/share/reshade"}
 RESHADE_PATH="$MAIN_PATH/reshade"
-
-mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
-cd "$MAIN_PATH" || exit
-
+WINE_MAIN_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
 MERGE_SHADERS=${MERGE_SHADERS:-1}
+VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
+GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
+SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
 
+# Z0001 Create MAIN_PATH
+# Z0002 Check if update enabled.
+# Z0003 Download / update shaders.
+# Z0004 Download / update ReShade.
+# Z0005 Process GLOBAL_INI.
+# Z0006 Vulkan install / uninstall.
+# Z0007 DirectX / OpenGL uninstall.
+# Z0008 DirectX / OpenGL find correct ReShade DLL.
+# Z0009 Download d3dcompiler_47.dll.
+# Z0010 DirectX / OpenGL link files to game directory.
+
+# Z0001
+mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
+cd "$MAIN_PATH" || exit
+# Z0001
+
+mkdir -p "$RESHADE_PATH"
+mkdir -p "$MAIN_PATH/ReShade_shaders"
+mkdir -p "$MAIN_PATH/External_shaders"
+
+# Z0002
 # Skip updating shaders / reshade if recently done (4 hours).
 [[ -f LASTUPDATED ]] && LASTUPDATED=$(cat LASTUPDATED) || LASTUPDATED=0
 [[ ! $LASTUPDATED =~ ^[0-9]+$ ]] && LASTUPDATED=0
 [[ $LASTUPDATED -gt 0 && $(($(date +%s)-$LASTUPDATED)) -lt 14400 ]] && UPDATE_RESHADE=0
 [[ $UPDATE_RESHADE == 1 ]] && date +%s > LASTUPDATED
+# Z0002
 
-SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
+echo -e "$SEPERATOR\nReShade installer/updater for Linux games using wine or proton.\n$SEPERATOR\n"
 
+# Z0003
+# TODO Combine the MERGE_SHADERS loop inside of the first loop.
 if [[ -n $SHADER_REPOS ]]; then
+    echo "Checking for ReShade Shader updates."
     for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
         localRepoName=$(echo "$URI" | cut -d'|' -f2)
         branchName=$(echo "$URI" | cut -d'|' -f3)
         URI=$(echo "$URI" | cut -d'|' -f1)
         if [[ -d "$MAIN_PATH/ReShade_shaders/$localRepoName" ]]; then
-            if [[ ! $UPDATE_RESHADE -eq 1 ]]; then
-                continue
-            fi
+            [[ ! $UPDATE_RESHADE -eq 1 ]] && continue
             cd "$MAIN_PATH/ReShade_shaders/$localRepoName" || continue
             echo "Updating ReShade shader repository $URI."
             git pull || echo "Could not update shader repo: $URI."
             continue
         fi
-        mkdir -p "$MAIN_PATH/ReShade_shaders"
         cd "$MAIN_PATH/ReShade_shaders" || exit
         [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
         eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
     done
     if [[ $MERGE_SHADERS == 1 ]]; then
-        if [[ $REBUILD_MERGE == 1 ]]; then
-            rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
-        fi
+        [[ $REBUILD_MERGE == 1 ]] && rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
         mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Shaders"
         mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/Textures"
         for URI in $(echo "$SHADER_REPOS" | tr ';' '\n'); do
             localRepoName=$(echo "$URI" | cut -d'|' -f2)
-            if [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" ]]; then
-                continue
-            fi
+            [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" ]] && continue
             cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders" || continue
             for file in *; do
-                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]]; then
-                    continue
-                fi
+                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
                 ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
             done
-            if [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" ]]; then
-                continue
-            fi
+            [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" ]] && continue
             cd "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures" || continue
             for file in *; do
-                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Textures/$file" ]]; then
-                    continue
-                fi
+                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Textures/$file" ]] && continue
                 ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/Textures/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Textures/"
             done
         done
         if [[ -d "$MAIN_PATH/External_shaders" ]]; then
             cd "$MAIN_PATH/External_shaders" || exit
             for file in *; do
-                if [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]]; then
-                    continue
-                fi
+                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
                 ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
             done
         fi
     fi
 fi
-
-cd "$MAIN_PATH" || exit
-
 echo "$SEPERATOR"
-mkdir -p "$RESHADE_PATH"
+# Z0003
 
+# Z0004
+cd "$MAIN_PATH" || exit
 [[ -f VERS ]] && VERS=$(cat VERS) || VERS=0
-
-if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
+if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/ReShade64.dll ]] || [[ ! -f reshade/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe")
-    if [[ $RVERS == "" ]]; then
-        printErr "Could not fetch ReShade version."
-    fi
+    RVERS=$(curl -sL https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    [[ $RVERS == "" ]] && printErr "Could not fetch ReShade version."
     if [[ $RVERS != "$VERS" ]]; then
         echo -e "Updating Reshade."
         createTempDir
-        curl -sO  https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
+        curl -sLO  https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
         exeFile="$(find . -name "*.exe")"
-        if ! [[ -f $exeFile ]]; then
-            printErr "Download of ReShade exe file failed."
-        fi
+        ! [[ -f $exeFile ]] && printErr "Download of ReShade exe file failed."
         7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
-        mv ./*32.dll d3d9.dll
-        mv ./*64.dll dxgi.dll
         rm -f "$exeFile"
         rm -rf "${RESHADE_PATH:?}"/*
         mv ./* "$RESHADE_PATH/"
@@ -373,10 +372,25 @@ if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
         echo "$RVERS" > VERS
     fi
 fi
+# Z0004
 
-WINE_MAIN_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
+# Z0005
+if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
+    cd "$MAIN_PATH" || exit
+    curl -sLO https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
+    if [[ -f ReShade.ini ]]; then
+        sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
+        if [[ $MERGE_SHADERS == 1 ]]; then
+            sed -i "s#_SHADSED_#$WINE_MAIN_PATH\\\ReShade_shaders\\\Merged\\\Shaders#g" "$MAIN_PATH/$GLOBAL_INI"
+            sed -i "s#_TEXSED_#$WINE_MAIN_PATH\\\ReShade_shaders\\\Merged\\\Textures#g" "$MAIN_PATH/$GLOBAL_INI"
+        fi
+    fi
+fi
+# Z0005
 
-VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
+# Z0006
+# TODO Requires changes for ReShade 5.0 ; paths and json files are different.
+# See https://github.com/kevinlekiller/reshade-steam-proton/issues/6#issuecomment-1027230967
 if [[ $VULKAN_SUPPORT == 1 ]]; then
     echo "Does the game use the Vulkan API?"
     if [[ $(checkStdin "(y/n): " "^(y|n)$") == "y" ]]; then
@@ -386,15 +400,12 @@ if [[ $VULKAN_SUPPORT == 1 ]]; then
             read -rp 'WINEPREFIX path: ' WINEPREFIX
             eval WINEPREFIX="$WINEPREFIX"
             WINEPREFIX=$(realpath "$WINEPREFIX")
-
             if ! ls "$WINEPREFIX" > /dev/null 2>&1 || [[ -z $WINEPREFIX ]]; then
                 echo "Incorrect or empty path supplied. You supplied \"$WINEPREFIX\"."
                 continue
             fi
             echo "Is this path correct? \"$WINEPREFIX\""
-            if [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]]; then
-                break
-            fi
+            [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && break
         done
         echo "Specify if the game's EXE file architecture is 32 or 64 bits:"
         [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64 || exeArch=32
@@ -406,16 +417,12 @@ if [[ $VULKAN_SUPPORT == 1 ]]; then
             wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:$exeArch
         fi
         [[ $? == 0 ]] && echo "Done." || echo "An error has occured."
-        if [[ ! -f $RESHADE_PATH/ReShade64.dll ]]; then
-            cp -f "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$RESHADE_PATH/ReShade64.dll"
-        fi
-        if [[ ! -f $RESHADE_PATH/ReShade32.dll ]]; then
-            cp -f "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$RESHADE_PATH/ReShade32.dll"
-        fi
         exit 0
     fi
 fi
+# Z0006
 
+# Z0007
 echo "Do you want to (i)nstall or (u)ninstall ReShade for a DirectX or OpenGL game?"
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
@@ -427,22 +434,16 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
             unlink "$gamePath/$link"
         fi
     done
-
     echo "Finished uninstalling ReShade for '$gamePath'."
     echo -e "\e[40m\e[32mMake sure to remove or change the \e[34mWINEDLLOVERRIDES\e[32m environment variable.\e[0m"
     exit 0
 fi
+# Z0007
 
-mkdir -p ReShade_shaders
-mkdir -p External_shaders
-cd "$MAIN_PATH/ReShade_shaders" || exit
-
+# Z0008
 getGamePath
-
 echo "Do you want $0 to attempt to automatically detect the right dll files to use for ReShade?"
-
 [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && wantedDll="auto" || wantedDll="manual"
-
 exeArch=32
 if [[ $wantedDll == "auto" ]]; then
     for file in "$gamePath/"*.exe; do
@@ -453,16 +454,11 @@ if [[ $wantedDll == "auto" ]]; then
     done
     [[ $exeArch -eq 32 ]] && wantedDll="d3d9" || wantedDll="dxgi"
     echo "We have detected the game is $exeArch bits, we will use $wantedDll.dll as the override, is this correct?"
-    if [[ $(checkStdin "(y/n) " "^(y|n)$") == "n" ]]; then
-        wantedDll="manual"
-    fi
+    [[ $(checkStdin "(y/n) " "^(y|n)$") == "n" ]] && wantedDll="manual"
 else
     echo "Specify if the game's EXE file architecture is 32 or 64 bits:"
-    if [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]]; then
-        exeArch=64
-    fi
+    [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64
 fi
-
 if [[ $wantedDll == "manual" ]]; then
     echo "Manually enter the dll override for ReShade, common values are one of: $COMMON_OVERRIDES"
     while true; do
@@ -470,53 +466,33 @@ if [[ $wantedDll == "manual" ]]; then
         wantedDll=${wantedDll//.dll/}
         echo "You have entered '$wantedDll', is this correct?"
         read -rp '(y/n): ' ynCheck
-        if [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]]; then
-            break
-        fi
+        [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]] && break
     done
 fi
+# Z0008
 
+# Z0009
 downloadD3dcompiler_47 "$exeArch"
+# Z0009
 
+# Z0010
 echo "Linking ReShade files to game directory."
-
-if [[ -L $gamePath/$wantedDll.dll ]]; then
-    unlink "$gamePath/$wantedDll.dll"
-fi
+[[ -L $gamePath/$wantedDll.dll ]] && unlink "$gamePath/$wantedDll.dll"
 if [[ $exeArch == 32 ]]; then
-    echo "Linking d3d9.dll to $wantedDll.dll."
-    ln -is "$(realpath "$RESHADE_PATH"/d3d9.dll)" "$gamePath/$wantedDll.dll"
+    echo "Linking ReShade32.dll to $wantedDll.dll."
+    ln -is "$(realpath "$RESHADE_PATH"/ReShade32.dll)" "$gamePath/$wantedDll.dll"
 else
-    echo "Linking dxgi.dll to $wantedDll.dll."
-    ln -is "$(realpath "$RESHADE_PATH"/dxgi.dll)" "$gamePath/$wantedDll.dll"
+    echo "Linking ReShade64.dll to $wantedDll.dll."
+    ln -is "$(realpath "$RESHADE_PATH"/ReShade64.dll)" "$gamePath/$wantedDll.dll"
 fi
-
-if [[ -L $gamePath/d3dcompiler_47.dll ]]; then
-    unlink "$gamePath/d3dcompiler_47.dll"
-fi
+[[ -L $gamePath/d3dcompiler_47.dll ]] && unlink "$gamePath/d3dcompiler_47.dll"
 ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$exeArch")" "$gamePath/d3dcompiler_47.dll"
-ln -is "$(realpath "$RESHADE_PATH"/ReShade32.json)" "$gamePath/"
-ln -is "$(realpath "$RESHADE_PATH"/ReShade64.json)" "$gamePath/"
 ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
-
-GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
-if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
-    cd "$MAIN_PATH" || exit
-    curl -sO https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
-    if [[ -f ReShade.ini ]]; then
-        sed -i "s/_USERSED_/$USER/g" "$MAIN_PATH/$GLOBAL_INI"
-        if [[ $MERGE_SHADERS == 1 ]]; then
-            sed -i "s#_SHADSED_#$WINE_MAIN_PATH\\\ReShade_shaders\\\Merged\\\Shaders#g" "$MAIN_PATH/$GLOBAL_INI"
-            sed -i "s#_TEXSED_#$WINE_MAIN_PATH\\\ReShade_shaders\\\Merged\\\Textures#g" "$MAIN_PATH/$GLOBAL_INI"
-        fi
-    fi
-fi
 if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
-    if [[ -L $gamePath/$GLOBAL_INI ]]; then
-        unlink "$gamePath/$GLOBAL_INI"
-    fi
+    [[ -L $gamePath/$GLOBAL_INI ]] && unlink "$gamePath/$GLOBAL_INI"
     ln -is "$(realpath "$MAIN_PATH/$GLOBAL_INI")" "$gamePath/$GLOBAL_INI"
 fi
+# Z0010
 
 echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
