@@ -64,6 +64,16 @@ cat > /dev/null <<DESCRIPTION
               put it in the MAIN_PATH folder, then set GLOBAL_INI to the name of the
               file, for example : GLOBAL_INI="ReShade2.ini" ./reshade-linux.sh
 
+        LINK_PRESET
+            Link a ReShade preset file to the game's directory.
+            Put the preset file in the MAIN_PATH, then run the script with LINK_PRESET set to the name of the file.
+            ex.: LINK_PRESET=ReShadePreset.ini ./reshade-linux.sh
+
+        DELETE_RESHADE_FILES
+            When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
+            Disabled by default.
+            ex.: DELETE_RESHADE_FILES=1 ./reshade-linux.sh
+
         VULKAN_SUPPORT
             As noted below, Vulkan / ReShade is not currently functional under wine.
             The script contains a function to enable ReShade under Vulkan, although it's disabled
@@ -269,37 +279,37 @@ VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
 GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
 
-# Z0001 Create MAIN_PATH
-# Z0002 Check if update enabled.
-# Z0003 Download / update shaders.
-# Z0004 Download / update ReShade.
-# Z0005 Process GLOBAL_INI.
-# Z0006 Vulkan install / uninstall.
-# Z0007 DirectX / OpenGL uninstall.
-# Z0008 DirectX / OpenGL find correct ReShade DLL.
-# Z0009 Download d3dcompiler_47.dll.
-# Z0010 DirectX / OpenGL link files to game directory.
+# Z0000 Create MAIN_PATH
+# Z0005 Check if update enabled.
+# Z0010 Download / update shaders.
+# Z0015 Download / update ReShade.
+# Z0020 Process GLOBAL_INI.
+# Z0025 Vulkan install / uninstall.
+# Z0030 DirectX / OpenGL uninstall.
+# Z0035 DirectX / OpenGL find correct ReShade DLL.
+# Z0040 Download d3dcompiler_47.dll.
+# Z0045 DirectX / OpenGL link files to game directory.
 
-# Z0001
+# Z0000
 mkdir -p "$MAIN_PATH" || printErr "Unable to create directory '$MAIN_PATH'."
 cd "$MAIN_PATH" || exit
-# Z0001
+# Z0000
 
 mkdir -p "$RESHADE_PATH"
 mkdir -p "$MAIN_PATH/ReShade_shaders"
 mkdir -p "$MAIN_PATH/External_shaders"
 
-# Z0002
+# Z0005
 # Skip updating shaders / reshade if recently done (4 hours).
 [[ -f LASTUPDATED ]] && LASTUPDATED=$(cat LASTUPDATED) || LASTUPDATED=0
 [[ ! $LASTUPDATED =~ ^[0-9]+$ ]] && LASTUPDATED=0
 [[ $LASTUPDATED -gt 0 && $(($(date +%s)-$LASTUPDATED)) -lt 14400 ]] && UPDATE_RESHADE=0
 [[ $UPDATE_RESHADE == 1 ]] && date +%s > LASTUPDATED
-# Z0002
+# Z0005
 
 echo -e "$SEPERATOR\nReShade installer/updater for Linux games using wine or proton.\n$SEPERATOR\n"
 
-# Z0003
+# Z0010
 if [[ -n $SHADER_REPOS ]]; then
     echo "Checking for ReShade Shader updates."
     [[ $REBUILD_MERGE == 1 ]] && rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
@@ -340,9 +350,9 @@ if [[ -n $SHADER_REPOS ]]; then
     fi
 fi
 echo "$SEPERATOR"
-# Z0003
+# Z0010
 
-# Z0004
+# Z0015
 cd "$MAIN_PATH" || exit
 [[ -f VERS ]] && VERS=$(cat VERS) || VERS=0
 if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/ReShade64.dll ]] || [[ ! -f reshade/ReShade32.dll ]]; then
@@ -364,9 +374,9 @@ if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/ReShade64.dll ]] || [[ ! -f re
         echo "$RVERS" > VERS
     fi
 fi
-# Z0004
+# Z0015
 
-# Z0005
+# Z0020
 if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
     cd "$MAIN_PATH" || exit
     curl -sLO https://github.com/kevinlekiller/reshade-steam-proton/raw/ini/ReShade.ini
@@ -378,9 +388,9 @@ if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_P
         fi
     fi
 fi
-# Z0005
+# Z0020
 
-# Z0006
+# Z0025
 # TODO Requires changes for ReShade 5.0 ; paths and json files are different.
 # See https://github.com/kevinlekiller/reshade-steam-proton/issues/6#issuecomment-1027230967
 if [[ $VULKAN_SUPPORT == 1 ]]; then
@@ -412,27 +422,31 @@ if [[ $VULKAN_SUPPORT == 1 ]]; then
         exit 0
     fi
 fi
-# Z0006
+# Z0025
 
-# Z0007
+# Z0030
 echo "Do you want to (i)nstall or (u)ninstall ReShade for a DirectX or OpenGL game?"
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
     echo "Unlinking ReShade files."
-    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade.ini ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures ReShade_shaders"
+    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade.ini ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures ReShade_shaders "$LINK_PRESET""
     for link in $LINKS; do
         if [[ -L $gamePath/$link ]]; then
             echo "Unlinking \"$gamePath/$link\"."
             unlink "$gamePath/$link"
         fi
     done
+    if [[ $DELETE_RESHADE_FILES == 1 ]]; then
+        echo "Deleting ReShade.log and ReShadePreset.ini"
+        rm -f "$gamePath/ReShade.log" "$gamePath/ReShadePreset.ini"
+    fi
     echo "Finished uninstalling ReShade for '$gamePath'."
     echo -e "\e[40m\e[32mMake sure to remove or change the \e[34mWINEDLLOVERRIDES\e[32m environment variable.\e[0m"
     exit 0
 fi
-# Z0007
+# Z0030
 
-# Z0008
+# Z0035
 getGamePath
 echo "Do you want $0 to attempt to automatically detect the right dll files to use for ReShade?"
 [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && wantedDll="auto" || wantedDll="manual"
@@ -461,13 +475,13 @@ if [[ $wantedDll == "manual" ]]; then
         [[ $ynCheck =~ ^(y|Y|yes|YES)$ ]] && break
     done
 fi
-# Z0008
+# Z0035
 
-# Z0009
+# Z0040
 downloadD3dcompiler_47 "$exeArch"
-# Z0009
+# Z0040
 
-# Z0010
+# Z0045
 echo "Linking ReShade files to game directory."
 [[ -L $gamePath/$wantedDll.dll ]] && unlink "$gamePath/$wantedDll.dll"
 if [[ $exeArch == 32 ]]; then
@@ -484,7 +498,11 @@ if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
     [[ -L $gamePath/$GLOBAL_INI ]] && unlink "$gamePath/$GLOBAL_INI"
     ln -is "$(realpath "$MAIN_PATH/$GLOBAL_INI")" "$gamePath/$GLOBAL_INI"
 fi
-# Z0010
+if [[ -f $MAIN_PATH/$LINK_PRESET ]]; then
+    echo "Linking $LINK_PRESET to game directory."
+    ln -s "$(realpath "$MAIN_PATH/$LINK_PRESET" "$gamePath/$LINK_PRESET"
+fi
+# Z0045
 
 echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
