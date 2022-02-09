@@ -76,7 +76,7 @@ cat > /dev/null <<DESCRIPTION
         7z     : Used to extract exe files
         curl   : Used to download files.
         git    : Used to clone ReShade shader repositories.
-        wine   : If the game uses Vulkan.
+        wine   : Only used if the game uses Vulkan (to insert Windows Registry entries).
 
     Notes:
         Vulkan / ReShade currently is not functional under wine.
@@ -125,7 +125,6 @@ cat > /dev/null <<DESCRIPTION
                     exe file, copy it, supply it to the script.
 
                     Or you can run : find ~/.local/share/Steam/steamapps/common -iregex ".*Back to the future.*.exe$"
-                    Then run : ls "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1"
                     We see BackToTheFuture101.exe is in "/home/kevin/.local/share/Steam/steamapps/common/Back to the Future Ep 1/"
 
                 Run this script: ./reshade-linux.sh
