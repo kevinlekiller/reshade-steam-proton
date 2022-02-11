@@ -36,7 +36,7 @@ cat > /dev/null <<DESCRIPTION
             By default this is set to :
                 https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
             The format is (the branch is optional) : URI|local_repo_name|branch
-            Use ; to seperate multiple URL's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
+            Use ; to seperate multiple repo's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
 
         MERGE_SHADERS
             If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
@@ -270,7 +270,8 @@ function downloadD3dcompiler_47() {
 
 SEPERATOR="------------------------------------------------------------------------------------------------"
 COMMON_OVERRIDES="d3d8 d3d9 d3d11 ddraw dinput8 dxgi opengl32"
-MAIN_PATH=${MAIN_PATH:-"$HOME/.local/share/reshade"}
+XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+MAIN_PATH=${MAIN_PATH:-"$XDG_DATA_HOME/reshade"}
 RESHADE_PATH="$MAIN_PATH/reshade"
 WINE_MAIN_PATH="$(echo "$MAIN_PATH" | sed "s#/home/$USER/##" | sed 's#/#\\\\#g')"
 UPDATE_RESHADE=${UPDATE_RESHADE:-1}
