@@ -73,7 +73,7 @@ cat > /dev/null <<DESCRIPTION
             To use a version of ReShade other than the newest version.
             If the version does not exist, the script will exit.
             The default is RESHADE_VERSION="latest"
-            ex.: RESHADE_VERSION="4.9.1"
+            ex.: RESHADE_VERSION="4.9.1" ./reshade-linux.sh
 
         DELETE_RESHADE_FILES
             When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
