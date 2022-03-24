@@ -69,6 +69,12 @@ cat > /dev/null <<DESCRIPTION
             Put the preset file in the MAIN_PATH, then run the script with LINK_PRESET set to the name of the file.
             ex.: LINK_PRESET=ReShadePreset.ini ./reshade-linux.sh
 
+        RESHADE_VERSION
+            To use a version of ReShade other than the newest version.
+            If the version does not exist, the script will exit.
+            The default is RESHADE_VERSION="latest"
+            ex.: RESHADE_VERSION="4.9.1"
+
         DELETE_RESHADE_FILES
             When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
             Disabled by default.
@@ -268,6 +274,21 @@ function downloadD3dcompiler_47() {
     removeTempDir
 }
 
+function downloadReshade() {
+    createTempDir
+    curl -sLO "$2" || printErr "Could not download version $1 of ReShade."
+    exeFile="$(find . -name "*.exe")"
+    ! [[ -f $exeFile ]] && printErr "Download of ReShade exe file failed."
+    [[ $(file $exeFile | grep -o executable) == "" ]] && printErr "The ReShade exe file is not an executable file, does the ReShade version exist?"
+    7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
+    rm -f "$exeFile"
+    resCurPath="$RESHADE_PATH/$1"
+    [[ -e $resCurPath ]] && rm -f "$resCurPath"
+    mkdir -p "$resCurPath"
+    mv ./* "$resCurPath"
+    removeTempDir
+}
+
 SEPERATOR="------------------------------------------------------------------------------------------------"
 COMMON_OVERRIDES="d3d8 d3d9 d3d11 ddraw dinput8 dxgi opengl32"
 XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
@@ -279,11 +300,13 @@ MERGE_SHADERS=${MERGE_SHADERS:-1}
 VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
 GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master"}
+RESHADE_VERSION=${RESHADE_VERSION:="latest"}
 
 # Z0000 Create MAIN_PATH
 # Z0005 Check if update enabled.
 # Z0010 Download / update shaders.
-# Z0015 Download / update ReShade.
+# Z0015 Download / update latest ReShade version.
+# Z0016 Download version of ReShade specified by user.
 # Z0020 Process GLOBAL_INI.
 # Z0025 Vulkan install / uninstall.
 # Z0030 DirectX / OpenGL uninstall.
@@ -356,27 +379,36 @@ echo "$SEPERATOR"
 
 # Z0015
 cd "$MAIN_PATH" || exit
-[[ -f VERS ]] && VERS=$(cat VERS) || VERS=0
-if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/ReShade64.dll ]] || [[ ! -f reshade/ReShade32.dll ]]; then
+[[ -f LVERS ]] && LVERS=$(cat LVERS) || LVERS=0
+if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/latest/ReShade64.dll ]] || [[ ! -f reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RVERS=$(curl -sL https://reshade.me | grep -Po "downloads/\S+?\.exe")
-    [[ $RVERS == "" ]] && printErr "Could not fetch ReShade version."
-    if [[ $RVERS != "$VERS" ]]; then
-        echo -e "Updating Reshade."
-        createTempDir
-        curl -sLO  https://reshade.me/"$RVERS" || printErr "Could not download latest version of ReShade."
-        exeFile="$(find . -name "*.exe")"
-        ! [[ -f $exeFile ]] && printErr "Download of ReShade exe file failed."
-        7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
-        rm -f "$exeFile"
-        rm -rf "${RESHADE_PATH:?}"/*
-        mv ./* "$RESHADE_PATH/"
-        removeTempDir
-        echo "Updated ReShade to version $(echo "$RVERS" | grep -o '[0-9][0-9.]*[0-9]')."
-        echo "$RVERS" > VERS
+    RLINK=$(curl -sL https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
+    RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(?=\.exe)")
+    if [[ $RVERS != $LVERS ]]; then
+        [[ -L $RESHADE_PATH/latest ]] && unlink "$RESHADE_PATH/latest"
+        echo -e "Updating ReShade to latest version."
+        downloadReshade "$RVERS" "https://reshade.me/$RLINK"
+        ln -is "$(realpath "$RESHADE_PATH/$RVERS")" "$(realpath "$RESHADE_PATH/latest")"
+        echo "$RVERS" > LVERS
+        echo "Updated ReShade to version "$RVERS"."
     fi
 fi
 # Z0015
+
+# Z0016
+cd "$MAIN_PATH" || exit
+if [[ $RESHADE_VERSION != latest ]]; then
+     if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
+        echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
+        [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
+        downloadReshade "$RESHADE_VERSION" "https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
+     fi
+     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
+else
+    echo -e "Using the latest version of ReShade.\n"
+fi
+# Z0016
 
 # Z0020
 if [[ $GLOBAL_INI != 0 ]] && [[ $GLOBAL_INI == ReShade.ini ]] && [[ ! -f $MAIN_PATH/$GLOBAL_INI ]]; then
@@ -416,7 +448,7 @@ if [[ $VULKAN_SUPPORT == 1 ]]; then
         export WINEPREFIX="$WINEPREFIX"
         echo "Do you want to (i)nstall or (u)ninstall ReShade?"
         if [[ $(checkStdin "(i/u): " "^(i|u)$") == "i" ]]; then
-            wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\ReShade$exeArch.json" -f /reg:$exeArch
+            wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\$RESHADE_VERSION\\ReShade$exeArch.json" -f /reg:$exeArch
         else
             wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:$exeArch
         fi
@@ -488,13 +520,14 @@ echo "Linking ReShade files to game directory."
 [[ -L $gamePath/$wantedDll.dll ]] && unlink "$gamePath/$wantedDll.dll"
 if [[ $exeArch == 32 ]]; then
     echo "Linking ReShade32.dll to $wantedDll.dll."
-    ln -is "$(realpath "$RESHADE_PATH"/ReShade32.dll)" "$gamePath/$wantedDll.dll"
+    ln -is "$(realpath "$RESHADE_PATH/$RESHADE_VERSION"/ReShade32.dll)" "$gamePath/$wantedDll.dll"
 else
     echo "Linking ReShade64.dll to $wantedDll.dll."
-    ln -is "$(realpath "$RESHADE_PATH"/ReShade64.dll)" "$gamePath/$wantedDll.dll"
+    ln -is "$(realpath "$RESHADE_PATH/$RESHADE_VERSION"/ReShade64.dll)" "$gamePath/$wantedDll.dll"
 fi
 [[ -L $gamePath/d3dcompiler_47.dll ]] && unlink "$gamePath/d3dcompiler_47.dll"
 ln -is "$(realpath "$MAIN_PATH/d3dcompiler_47.dll.$exeArch")" "$gamePath/d3dcompiler_47.dll"
+[[ -L $gamePath/ReShade_shaders ]] && unlink "$gamePath/ReShade_shaders"
 ln -is "$(realpath "$MAIN_PATH"/ReShade_shaders)" "$gamePath/"
 if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
     [[ -L $gamePath/$GLOBAL_INI ]] && unlink "$gamePath/$GLOBAL_INI"
@@ -502,7 +535,8 @@ if [[ $GLOBAL_INI != 0 ]] && [[ -f $MAIN_PATH/$GLOBAL_INI ]]; then
 fi
 if [[ -f $MAIN_PATH/$LINK_PRESET ]]; then
     echo "Linking $LINK_PRESET to game directory."
-    ln -s "$(realpath "$MAIN_PATH/$LINK_PRESET")" "$gamePath/$LINK_PRESET"
+    [[ -L $gamePath/$LINK_PRESET ]] && unlink "$gamePath/$LINK_PRESET"
+    ln -is "$(realpath "$MAIN_PATH/$LINK_PRESET")" "$gamePath/$LINK_PRESET"
 fi
 # Z0045
 
