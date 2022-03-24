@@ -274,6 +274,9 @@ function downloadD3dcompiler_47() {
     removeTempDir
 }
 
+# Download / extract ReShade from specified link.
+# $1 => Version of ReShade
+# $2 -> Full URL of ReShade exe, ex.: https://reshade.me/downloads/ReShade_Setup_5.0.2.exe
 function downloadReshade() {
     createTempDir
     curl -sLO "$2" || printErr "Could not download version $1 of ReShade."
