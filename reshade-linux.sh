@@ -399,14 +399,14 @@ fi
 # Z0016
 cd "$MAIN_PATH" || exit
 if [[ $RESHADE_VERSION != latest ]]; then
-     if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
+    if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
         echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
         [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
         downloadReshade "$RESHADE_VERSION" "https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
-     fi
-     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
+    fi
+    echo -e "Using version $RESHADE_VERSION of ReShade.\n"
 else
-    echo -e "Using the latest version of ReShade.\n"
+    echo -e "Using the latest version of ReShade ($LVERS).\n"
 fi
 # Z0016
 
