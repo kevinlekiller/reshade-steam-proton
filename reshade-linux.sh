@@ -283,7 +283,7 @@ function downloadReshade() {
     7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
     rm -f "$exeFile"
     resCurPath="$RESHADE_PATH/$1"
-    [[ -e $resCurPath ]] && rm -f "$resCurPath"
+    [[ -e $resCurPath ]] && rm -rf "$resCurPath"
     mkdir -p "$resCurPath"
     mv ./* "$resCurPath"
     removeTempDir
@@ -380,7 +380,7 @@ echo "$SEPERATOR"
 # Z0015
 cd "$MAIN_PATH" || exit
 [[ -f LVERS ]] && LVERS=$(cat LVERS) || LVERS=0
-if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -f reshade/latest/ReShade64.dll ]] || [[ ! -f reshade/latest/ReShade32.dll ]]; then
+if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
     RLINK=$(curl -sL https://reshade.me | grep -Po "downloads/\S+?\.exe")
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
