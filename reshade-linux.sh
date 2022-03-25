@@ -230,7 +230,7 @@ function getGamePath() {
     echo '(Control+c to exit)'
     while true; do
         read -rp 'Game path: ' gamePath
-        eval gamePath="$gamePath"
+        eval gamePath="$gamePath" &> /dev/null
         gamePath=$(realpath "$gamePath")
         [[ -f $gamePath ]] && gamePath=$(dirname "$gamePath")
         if ! ls "$gamePath" > /dev/null 2>&1 || [[ -z $gamePath ]]; then
