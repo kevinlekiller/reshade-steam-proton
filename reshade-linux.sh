@@ -394,6 +394,7 @@ if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ 
         downloadReshade "$RVERS" "https://reshade.me/$RLINK"
         ln -is "$(realpath "$RESHADE_PATH/$RVERS")" "$(realpath "$RESHADE_PATH/latest")"
         echo "$RVERS" > LVERS
+        LVERS="$RVERS"
         echo "Updated ReShade to version "$RVERS"."
     fi
 fi
