@@ -21,72 +21,6 @@ cat > /dev/null <<DESCRIPTION
     Bash script to download ReShade and ReShade shaders then links them to a game directory for games using Wine or Proton on Linux.
     By linking, re-running this script will update ReShade / shaders for all games.
 
-    Environment Variables:
-        UPDATE_RESHADE
-            To skip checking for ReShade and shader updates, set UPDATE_RESHADE=0
-            ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
-
-        MAIN_PATH
-            By default, this script stores all it's files, inlcuding ReShade and the shaders in XDG_DATA_HOME/reshade ($HOME/.local/share/reshade)
-            You can override this by setting the MAIN_PATH variable.
-            ex.: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
-
-        SHADER_REPOS
-            List of git repo URI's to clone or update which contain reshade shaders.
-            By default this is set to :
-                https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
-            The format is (the branch is optional) : URI|local_repo_name|branch
-            Use ; to seperate multiple repo's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
-
-        MERGE_SHADERS
-            If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
-            For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx,
-              by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
-            The order of importance for shaders is taken from SHADER_REPOS.
-            The default is MERGE_SHADERS=1
-            To disable, set MERGE_SHADERS=0
-
-        REBUILD_MERGE
-            Set to REBUILD_MERGE to 1 to rebuild the MERGE_SHADERS folder.
-            This is useful if you have changed SHADER_REPOS
-            ex.: REBUILD_MERGE=1 SHADER_REPOS="https://github.com/martymcmodding/qUINT|martymc-shaders" ./reshade-linux.sh
-
-        GLOBAL_INI
-            With the default, GLOBAL_INI=1, the script will create a ReShade.ini file and store it
-              in MAIN_PATH folder if it does not exist.
-            The script will link this ReShade.ini file to the game's path.
-            If you have disabled MERGE_SHADERS, you will need to manually edit the paths by editing
-              this ReShade.ini file. Alternatively, when ReShade launches, you can change the paths in the GUI.
-            You can disable GLOBAL_INI with : GLOBAL_INI=0
-            Disabling GLOBAL_INI will cause ReShade to create a ReShade.ini file when the game starts,
-              you will then need to manually configure ReShade when the game starts.
-            You can also use a different ReShade.ini than the one that is created by this script,
-              put it in the MAIN_PATH folder, then set GLOBAL_INI to the name of the
-              file, for example : GLOBAL_INI="ReShade2.ini" ./reshade-linux.sh
-
-        LINK_PRESET
-            Link a ReShade preset file to the game's directory.
-            Put the preset file in the MAIN_PATH, then run the script with LINK_PRESET set to the name of the file.
-            ex.: LINK_PRESET=ReShadePreset.ini ./reshade-linux.sh
-
-        RESHADE_VERSION
-            To use a version of ReShade other than the newest version.
-            If the version does not exist, the script will exit.
-            The default is RESHADE_VERSION="latest"
-            ex.: RESHADE_VERSION="4.9.1" ./reshade-linux.sh
-
-        DELETE_RESHADE_FILES
-            When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
-            Disabled by default.
-            ex.: DELETE_RESHADE_FILES=1 ./reshade-linux.sh
-
-        VULKAN_SUPPORT
-            As noted below, Vulkan / ReShade is not currently functional under wine.
-            The script contains a function to enable ReShade under Vulkan, although it's disabled
-            by default since it's currently not functional, you can enable this function by
-            passing VULKAN_SUPPORT=1
-            ex.: VULKAN_SUPPORT=1 ./reshade-linux.sh
-
     Requirements:
         grep   : Used in various parts of the script. Uses the --perl-regexp option (not available on bsd).
         7z     : Used to extract exe files
@@ -103,22 +37,22 @@ cat > /dev/null <<DESCRIPTION
             Provide the WINEPREFIX to the script, for Steam games, the WINEPREFIX's folder name is the App ID and is stored in ~/.local/share/Steam/steamapps/compatdata/
             For example, on Doom (2016) on Steam, the WINEPREFIX is ~/.local/share/Steam/steamapps/compatdata/379720
 
-        OpenGL games like Wolfenstein: The New Order, require the dll to be named opengl32.dll
+        OpenGL games require the dll to be named opengl32.dll (Wolfenstein: The New Order for example).
         You will want to respond 'n' when asked for automatic detection of the dll.
         Then you will write 'opengl32' when asked for the name of the dll to override.
         You can check on pcgamingwiki.com to see what graphic API the game uses.
 
-        Some games like Leisure Suit Larry: Wet Dreams Don't Dry have a 32 bit exe but use Direct3D 11,
+        Some games 32 bit games use Direct3D 11 (Leisure Suit Larry: Wet Dreams Don't Dry for example),
         you'll have to manually specify the architecture (32) and DLL name (dxgi).
 
         Adding shader files not in a repository to the Merged/Shaders folder:
-            For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/martymcmodding/aee91b22570eb921f12d87173cacda03
+            For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/kevinlekiller/cbb663e14b0f6ad6391a0062351a31a2
             Create the External_shaders folder inside the MAIN_PATH folder (by default $HOME/.local/share/reshade)
-            Add the shader to it: cd "$HOME/.local/share/reshade/External_shaders" && curl -LO https://gist.githubusercontent.com/martymcmodding/aee91b22570eb921f12d87173cacda03/raw/CMAA2.fx
+            Add the shader to it: cd "$HOME/.local/share/reshade/External_shaders" && curl -LO https://gist.github.com/kevinlekiller/cbb663e14b0f6ad6391a0062351a31a2/raw/CMAA2.fx
             Run this script, the shader will then be linked to the Merged folder.
 
         When you enable shaders in Reshade, this is a rough ideal order of shaders :
-            color -> contrast/brightness/gamma -> anti-aliasing -> sharpening
+            color -> contrast/brightness/gamma -> anti-aliasing -> sharpening -> film grain
 
     Usage:
         Download the script
@@ -200,6 +134,72 @@ cat > /dev/null <<DESCRIPTION
         Removing ReShade / shader files:
             By default the files are stored in $HOME/.local/share/reshade
             Run: rm -rf "$HOME/.local/share/reshade"
+
+    Environment Variables:
+        UPDATE_RESHADE
+            To skip checking for ReShade and shader updates, set UPDATE_RESHADE=0
+            ex.: UPDATE_RESHADE=0 ./reshade-linux.sh
+
+        MAIN_PATH
+            By default, this script stores all it's files, inlcuding ReShade and the shaders in XDG_DATA_HOME/reshade ($HOME/.local/share/reshade)
+            You can override this by setting the MAIN_PATH variable.
+            ex.: MAIN_PATH=~/Documents/reshade ./reshade-linux.sh
+
+        SHADER_REPOS
+            List of git repo URI's to clone or update which contain reshade shaders.
+            By default this is set to :
+                https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|master
+            The format is (the branch is optional) : URI|local_repo_name|branch
+            Use ; to seperate multiple repo's. For example: URI1|local_repo_name_1|master;URI2|local_repo_name_2
+
+        MERGE_SHADERS
+            If you're using multiple shader repositories, all the unique shaders will be put into one folder called Merged.
+            For example, if you use reshade-shaders and sweetfx-shaders, both have ASCII.fx,
+              by enabling MERGE_SHADERS, only 1 ASCII.fx is put into the Merged folder.
+            The order of importance for shaders is taken from SHADER_REPOS.
+            The default is MERGE_SHADERS=1
+            To disable, set MERGE_SHADERS=0
+
+        REBUILD_MERGE
+            Set to REBUILD_MERGE to 1 to rebuild the MERGE_SHADERS folder.
+            This is useful if you have changed SHADER_REPOS
+            ex.: REBUILD_MERGE=1 SHADER_REPOS="https://github.com/martymcmodding/qUINT|martymc-shaders" ./reshade-linux.sh
+
+        GLOBAL_INI
+            With the default, GLOBAL_INI=1, the script will create a ReShade.ini file and store it
+              in MAIN_PATH folder if it does not exist.
+            The script will link this ReShade.ini file to the game's path.
+            If you have disabled MERGE_SHADERS, you will need to manually edit the paths by editing
+              this ReShade.ini file. Alternatively, when ReShade launches, you can change the paths in the GUI.
+            You can disable GLOBAL_INI with : GLOBAL_INI=0
+            Disabling GLOBAL_INI will cause ReShade to create a ReShade.ini file when the game starts,
+              you will then need to manually configure ReShade when the game starts.
+            You can also use a different ReShade.ini than the one that is created by this script,
+              put it in the MAIN_PATH folder, then set GLOBAL_INI to the name of the
+              file, for example : GLOBAL_INI="ReShade2.ini" ./reshade-linux.sh
+
+        LINK_PRESET
+            Link a ReShade preset file to the game's directory.
+            Put the preset file in the MAIN_PATH, then run the script with LINK_PRESET set to the name of the file.
+            ex.: LINK_PRESET=ReShadePreset.ini ./reshade-linux.sh
+
+        RESHADE_VERSION
+            To use a version of ReShade other than the newest version.
+            If the version does not exist, the script will exit.
+            The default is RESHADE_VERSION="latest"
+            ex.: RESHADE_VERSION="4.9.1" ./reshade-linux.sh
+
+        DELETE_RESHADE_FILES
+            When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
+            Disabled by default.
+            ex.: DELETE_RESHADE_FILES=1 ./reshade-linux.sh
+
+        VULKAN_SUPPORT
+            As noted below, Vulkan / ReShade is not currently functional under wine.
+            The script contains a function to enable ReShade under Vulkan, although it's disabled
+            by default since it's currently not functional, you can enable this function by
+            passing VULKAN_SUPPORT=1
+            ex.: VULKAN_SUPPORT=1 ./reshade-linux.sh
 DESCRIPTION
 
 # Print error and exit
