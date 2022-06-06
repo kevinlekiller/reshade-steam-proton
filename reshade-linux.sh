@@ -385,7 +385,7 @@ cd "$MAIN_PATH" || exit
 [[ -f LVERS ]] && LVERS=$(cat LVERS) || LVERS=0
 if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RLINK=$(curl -sL https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    RLINK=$(curl -sL https://reshade.me | grep -Po "downloads/ReShade_Setup_[\d.]+\.exe" | head -n1)
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(?=\.exe)")
     if [[ $RVERS != $LVERS ]]; then
