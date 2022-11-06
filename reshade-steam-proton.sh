@@ -1,6 +1,6 @@
 #!/bin/bash
 cat > /dev/null <<LICENSE
-    Copyright (C) 2021  kevinlekiller
+    Copyright (C) 2021-2022  kevinlekiller
     
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
@@ -237,7 +237,7 @@ mkdir -p "$RESHADE_PATH"
 
 if [[ ! -f reshade/dxgi.dll ]] || [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RVERS=$(curl -s https://reshade.me | grep -Po "downloads/\S+?\.exe")
+    RVERS=$(curl -sL https://reshade.me | grep -Po "downloads/ReShade_Setup_[\d.]+\.exe" | head -n1)
     if [[ $RVERS == "" ]]; then
         printErr "Could not fetch ReShade version."
     fi
