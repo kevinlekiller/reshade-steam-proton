@@ -222,7 +222,7 @@ fi
 
 if [[ ! -d reshade-shaders ]]; then
     echo -e "Installing reshade shaders.\n$SEPERATOR"
-    git clone --branch master https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
+    git clone --branch slim https://github.com/crosire/reshade-shaders || printErr "Unable to clone https://github.com/crosire/reshade-shaders"
 elif [[ $UPDATE_RESHADE -eq 1 ]]; then
     echo -e "Updating reshade shaders.\n$SEPERATOR"
     cd reshade-shaders || printErr "reshade-shaders folder missing."
