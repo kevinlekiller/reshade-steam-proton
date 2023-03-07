@@ -189,6 +189,17 @@ cat > /dev/null <<DESCRIPTION
             The default is RESHADE_VERSION="latest"
             ex.: RESHADE_VERSION="4.9.1" ./reshade-linux.sh
 
+        FORCE_RESHADE_UPDATE_CHECK
+            By default the script will only check for updates if the script hasn't been run in more than 4 hours.
+            This will bypass the 4 hours.
+            ex.: FORCE_RESHADE_UPDATE_CHECK=1 ./reshade-linux.sh
+
+        RESHADE_ADDON_SUPPORT
+            This will download ReShade with addon support, it's only intended for single player games,
+             since anti-cheat software might detect it as malicious.
+            You might want to use FORCE_RESHADE_UPDATE_CHECK=1 with this option.
+            ex.: RESHADE_ADDON_SUPPORT=1 FORCE_RESHADE_UPDATE_CHECK=1 ./reshade-linux.sh
+
         DELETE_RESHADE_FILES
             When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
             Disabled by default.
@@ -303,7 +314,8 @@ MERGE_SHADERS=${MERGE_SHADERS:-1}
 VULKAN_SUPPORT=${VULKAN_SUPPORT:-0}
 GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|slim"}
-RESHADE_VERSION=${RESHADE_VERSION:="latest"}
+RESHADE_VERSION=${RESHADE_VERSION:-"latest"}
+RESHADE_ADDON_SUPPORT=${RESHADE_ADDON_SUPPORT:-0}
 
 # Z0000 Create MAIN_PATH
 # Z0005 Check if update enabled.
@@ -383,11 +395,16 @@ echo "$SEPERATOR"
 # Z0015
 cd "$MAIN_PATH" || exit
 [[ -f LVERS ]] && LVERS=$(cat LVERS) || LVERS=0
-if [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
+# Check if user wants reshade without addon support and we're currently using reshade with addon support.
+[[ $LVERS =~ Addon && $RESHADE_ADDON_SUPPORT -eq 0 ]] && UPDATE_RESHADE=1
+# Check if user wants reshade with addon support and we're not currently using reshade with addon support.
+[[ ! $LVERS =~ Addon ]] && [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && UPDATE_RESHADE=1
+if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    RLINK=$(curl -sL https://reshade.me | grep -Po "downloads/ReShade_Setup_[\d.]+\.exe" | head -n1)
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="downloads/ReShade_Setup_[\d.]+\.exe"
+    RLINK=$(curl -sL https://reshade.me | grep -Po "$LREGEX" | head -n1)
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
-    RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(?=\.exe)")
+    RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(_Addon)?(?=\.exe)")
     if [[ $RVERS != $LVERS ]]; then
         [[ -L $RESHADE_PATH/latest ]] && unlink "$RESHADE_PATH/latest"
         echo -e "Updating ReShade to latest version."
@@ -406,7 +423,8 @@ if [[ $RESHADE_VERSION != latest ]]; then
     if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
         echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
         [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
-        downloadReshade "$RESHADE_VERSION" "https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
+        [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && RURL="https://reshade.me/downloads/ReShade_Setup_${RESHADE_VERSION}_Addon.exe" || RURL="https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
+        downloadReshade "$RESHADE_VERSION"
     fi
     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
 else
