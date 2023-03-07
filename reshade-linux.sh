@@ -315,6 +315,7 @@ GLOBAL_INI=${GLOBAL_INI:-"ReShade.ini"}
 SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shaders;https://github.com/martymcmodding/qUINT|martymc-shaders;https://github.com/BlueSkyDefender/AstrayFX|astrayfx-shaders;https://github.com/prod80/prod80-ReShade-Repository|prod80-shaders;https://github.com/crosire/reshade-shaders|reshade-shaders|slim"}
 RESHADE_VERSION=${RESHADE_VERSION:-"latest"}
 RESHADE_ADDON_SUPPORT=${RESHADE_ADDON_SUPPORT:-0}
+FORCE_RESHADE_UPDATE_CHECK=${FORCE_RESHADE_UPDATE_CHECK:-0}
 
 # Z0000 Create MAIN_PATH
 # Z0005 Check if update enabled.
