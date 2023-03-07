@@ -197,8 +197,7 @@ cat > /dev/null <<DESCRIPTION
         RESHADE_ADDON_SUPPORT
             This will download ReShade with addon support, it's only intended for single player games,
              since anti-cheat software might detect it as malicious.
-            You might want to use FORCE_RESHADE_UPDATE_CHECK=1 with this option.
-            ex.: RESHADE_ADDON_SUPPORT=1 FORCE_RESHADE_UPDATE_CHECK=1 ./reshade-linux.sh
+            ex.: RESHADE_ADDON_SUPPORT=1 ./reshade-linux.sh
 
         DELETE_RESHADE_FILES
             When uninstalling ReShade for game, if DELETE_RESHADE_FILES is set to 1, ReShade.log and ReShadePreset.ini will be deleted.
