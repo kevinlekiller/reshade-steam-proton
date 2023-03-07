@@ -424,7 +424,7 @@ if [[ $RESHADE_VERSION != latest ]]; then
         echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
         [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
         [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && RURL="https://reshade.me/downloads/ReShade_Setup_${RESHADE_VERSION}_Addon.exe" || RURL="https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
-        downloadReshade "$RESHADE_VERSION"
+        downloadReshade "$RESHADE_VERSION" "$RURL"
     fi
     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
 else
