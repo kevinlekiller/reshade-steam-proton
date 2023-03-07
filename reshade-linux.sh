@@ -395,10 +395,12 @@ echo "$SEPERATOR"
 # Z0015
 cd "$MAIN_PATH" || exit
 [[ -f LVERS ]] && LVERS=$(cat LVERS) || LVERS=0
-# Check if user wants reshade without addon support and we're currently using reshade with addon support.
-[[ $LVERS =~ Addon && $RESHADE_ADDON_SUPPORT -eq 0 ]] && UPDATE_RESHADE=1
-# Check if user wants reshade with addon support and we're not currently using reshade with addon support.
-[[ ! $LVERS =~ Addon ]] && [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && UPDATE_RESHADE=1
+if [[ $RESHADE_VERSION == latest ]]; then
+    # Check if user wants reshade without addon support and we're currently using reshade with addon support.
+    [[ $LVERS =~ Addon && $RESHADE_ADDON_SUPPORT -eq 0 ]] && UPDATE_RESHADE=1
+    # Check if user wants reshade with addon support and we're not currently using reshade with addon support.
+    [[ ! $LVERS =~ Addon ]] && [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && UPDATE_RESHADE=1
+fi
 if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
     [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="downloads/ReShade_Setup_[\d.]+\.exe"
@@ -420,11 +422,11 @@ fi
 # Z0016
 cd "$MAIN_PATH" || exit
 if [[ $RESHADE_VERSION != latest ]]; then
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && RESHADE_VERSION="${RESHADE_VERSION}_Addon"
     if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
         echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
         [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
-        [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && RURL="https://reshade.me/downloads/ReShade_Setup_${RESHADE_VERSION}_Addon.exe" || RURL="https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
-        downloadReshade "$RESHADE_VERSION" "$RURL"
+        downloadReshade "$RESHADE_VERSION" "https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
     fi
     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
 else
