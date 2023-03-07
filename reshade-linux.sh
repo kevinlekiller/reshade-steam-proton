@@ -42,8 +42,8 @@ cat > /dev/null <<DESCRIPTION
         Then you will write 'opengl32' when asked for the name of the dll to override.
         You can check on pcgamingwiki.com to see what graphic API the game uses.
 
-        Some games 32 bit games use Direct3D 11 (Leisure Suit Larry: Wet Dreams Don't Dry for example),
-        you'll have to manually specify the architecture (32) and DLL name (dxgi).
+        Some 32 bit games use Direct3D 11 (Leisure Suit Larry: Wet Dreams Don't Dry for example),
+         you'll have to manually specify the architecture (32) and DLL name (dxgi).
 
         Adding shader files not in a repository to the Merged/Shaders folder:
             For example, if we want to add this shader (CMAA2.fx) https://gist.github.com/kevinlekiller/cbb663e14b0f6ad6391a0062351a31a2
@@ -292,7 +292,7 @@ function downloadReshade() {
     curl -sLO "$2" || printErr "Could not download version $1 of ReShade."
     exeFile="$(find . -name "*.exe")"
     ! [[ -f $exeFile ]] && printErr "Download of ReShade exe file failed."
-    [[ $(file $exeFile | grep -o executable) == "" ]] && printErr "The ReShade exe file is not an executable file, does the ReShade version exist?"
+    [[ $(file "$exeFile" | grep -o executable) == "" ]] && printErr "The ReShade exe file is not an executable file, does the ReShade version exist?"
     7z -y e "$exeFile" 1> /dev/null || printErr "Failed to extract ReShade using 7z."
     rm -f "$exeFile"
     resCurPath="$RESHADE_PATH/$1"
@@ -304,6 +304,7 @@ function downloadReshade() {
 
 SEPERATOR="------------------------------------------------------------------------------------------------"
 COMMON_OVERRIDES="d3d8 d3d9 d3d11 ddraw dinput8 dxgi opengl32"
+REQUIRED_EXECUTABLES="7z curl git grep"
 XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
 MAIN_PATH=${MAIN_PATH:-"$XDG_DATA_HOME/reshade"}
 RESHADE_PATH="$MAIN_PATH/reshade"
@@ -316,6 +317,13 @@ SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shader
 RESHADE_VERSION=${RESHADE_VERSION:-"latest"}
 RESHADE_ADDON_SUPPORT=${RESHADE_ADDON_SUPPORT:-0}
 FORCE_RESHADE_UPDATE_CHECK=${FORCE_RESHADE_UPDATE_CHECK:-0}
+
+for REQUIRED_EXECUTABLE in $REQUIRED_EXECUTABLES; do
+    if ! which "$REQUIRED_EXECUTABLE" &> /dev/null; then
+        echo -ne "Program '$REQUIRED_EXECUTABLE' is missing, but it is required.\nExiting.\n"
+        exit 1
+    fi
+done
 
 # Z0000 Create MAIN_PATH
 # Z0005 Check if update enabled.
@@ -342,7 +350,7 @@ mkdir -p "$MAIN_PATH/External_shaders"
 # Skip updating shaders / reshade if recently done (4 hours).
 [[ -f LASTUPDATED ]] && LASTUPDATED=$(cat LASTUPDATED) || LASTUPDATED=0
 [[ ! $LASTUPDATED =~ ^[0-9]+$ ]] && LASTUPDATED=0
-[[ $LASTUPDATED -gt 0 && $(($(date +%s)-$LASTUPDATED)) -lt 14400 ]] && UPDATE_RESHADE=0
+[[ $LASTUPDATED -gt 0 && $(($(date +%s)-LASTUPDATED)) -lt 14400 ]] && UPDATE_RESHADE=0
 [[ $UPDATE_RESHADE == 1 ]] && date +%s > LASTUPDATED
 # Z0005
 
@@ -407,14 +415,14 @@ if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ 
     RLINK=$(curl -sL https://reshade.me | grep -Po "$LREGEX" | head -n1)
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(_Addon)?(?=\.exe)")
-    if [[ $RVERS != $LVERS ]]; then
+    if [[ $RVERS != "$LVERS" ]]; then
         [[ -L $RESHADE_PATH/latest ]] && unlink "$RESHADE_PATH/latest"
         echo -e "Updating ReShade to latest version."
         downloadReshade "$RVERS" "https://reshade.me/$RLINK"
         ln -is "$(realpath "$RESHADE_PATH/$RVERS")" "$(realpath "$RESHADE_PATH/latest")"
         echo "$RVERS" > LVERS
         LVERS="$RVERS"
-        echo "Updated ReShade to version "$RVERS"."
+        echo "Updated ReShade to version $RVERS."
     fi
 fi
 # Z0015
@@ -472,9 +480,9 @@ if [[ $VULKAN_SUPPORT == 1 ]]; then
         export WINEPREFIX="$WINEPREFIX"
         echo "Do you want to (i)nstall or (u)ninstall ReShade?"
         if [[ $(checkStdin "(i/u): " "^(i|u)$") == "i" ]]; then
-            wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\$RESHADE_VERSION\\ReShade$exeArch.json" -f /reg:$exeArch
+            wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\$RESHADE_VERSION\\ReShade$exeArch.json" -f /reg:"$exeArch"
         else
-            wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:$exeArch
+            wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:"$exeArch"
         fi
         [[ $? == 0 ]] && echo "Done." || echo "An error has occured."
         exit 0
