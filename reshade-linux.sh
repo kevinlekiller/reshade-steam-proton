@@ -363,12 +363,15 @@ echo -e "$SEPERATOR\nReShade installer/updater for Linux games using wine or pro
 # $2 is the output directory name (Textures / Shaders), with optional subdirectory.
 function linkShaderFiles() {
     [[ ! -d $1 ]] && return
-    [[ ! -d $2 ]] && mkdir -p "$2"
     cd "$1" || return
     for file in *; do
         [[ ! -f $file ]] && continue
         [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$2/$file" ]] && continue
-        ln -s "$(realpath "$1/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$2/"
+        INFILE="$(realpath "$1/$file")"
+        OUTFILE="$(realpath "$MAIN_PATH/ReShade_shaders/Merged/$2/$file")"
+        [[ ! -d $OUTDIR ]] && mkdir -p "$OUTDIR"
+        echo "Linking $INFILE to $OUTDIR"
+        ln -s "$INFILE" "$OUTDIR"
     done
 }
 if [[ -n $SHADER_REPOS ]]; then
@@ -392,9 +395,9 @@ if [[ -n $SHADER_REPOS ]]; then
         fi
         if [[ $MERGE_SHADERS == 1 ]]; then
             for dirName in Shaders Textures; do
-                dirPath=$(find "$MAIN_PATH/ReShade_shaders/$localRepoName" -type d -name "$dirName")
+                dirPath=$(find "$MAIN_PATH/ReShade_shaders/$localRepoName" ! -path . -type d -name "$dirName")
                 linkShaderFiles "$dirPath" "$dirName"
-                while IFS= read -r -d '' anyDir; do
+                while IFS= read -rd '' anyDir; do
                     linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
                 done < <(find . ! -path . -type d -print0)
             done
@@ -406,9 +409,15 @@ if [[ -n $SHADER_REPOS ]]; then
             dirPath="$MAIN_PATH/External_shaders/$dirName"
             linkShaderFiles "$dirPath" "$dirName"
             # Check if there are any extra directories inside the Shaders or Texture folder, and link them.
-            while IFS= read -r -d '' anyDir; do
+            while IFS= read -rd '' anyDir; do
                 linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
             done < <(find . ! -path . -type d -print0)
+        done
+        # Link loose files.
+        cd "$MAIN_PATH/External_shaders" || continue
+        for file in *; do
+            [[ ! -f $file || -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
+            ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
         done
     fi
 fi
