@@ -394,7 +394,7 @@ if [[ -n $SHADER_REPOS ]]; then
                 dirPath=$(find "$MAIN_PATH/ReShade_shaders/$localRepoName" -type d -name "$dirName")
                 linkShaderFiles "$dirPath" "$dirName"
                 while IFS= read -r -d '' anyDir; do
-                    linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"e
+                    linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
                 done < <(find . ! -path . -type d -print0)
             done
         fi
