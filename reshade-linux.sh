@@ -378,22 +378,47 @@ if [[ -n $SHADER_REPOS ]]; then
         fi
         if [[ $MERGE_SHADERS == 1 ]]; then
             for dirName in Shaders Textures; do
-                [[ ! -d "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName" ]] && continue
-                cd "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName" || continue
+                dirPath=$(find "$MAIN_PATH/ReShade_shaders/$localRepoName" -type d -name "$dirName")
+                [[ ! -n "$dirPath" ]] && continue
+                cd "$dirPath" || continue
                 for file in *; do
                     [[ ! -f $file ]] && continue
                     [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$file" ]] && continue
-                    ln -s "$(realpath "$MAIN_PATH/ReShade_shaders/$localRepoName/$dirName/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/"
+                    ln -s "$(realpath "$dirPath/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/"
+                done
+                for anyDir in $(find . -type d); do
+                    [[ ! -d "$dirPath/$anyDir" ]] && continue
+                    [[ ! -d "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$anyDir" ]] && mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$anyDir"
+                    cd "$dirPath/$anyDir" || continue
+                    for file in *; do
+                        [[ ! -f $file ]] && continue
+                        [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$anyDir/$file" ]] && continue
+                        ln -s "$(realpath "$dirPath/$anyDir/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$anyDir/"
+                    done
                 done
             done
         fi
     done
+    echo "Checking for External Shader updates."
     if [[ $MERGE_SHADERS == 1 ]] && [[ -d "$MAIN_PATH/External_shaders" ]]; then
-        cd "$MAIN_PATH/External_shaders" || exit
-        for file in *; do
-            [[ ! -f $file ]] && continue
-            [[ -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
-            ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
+        for dirName in Shaders Textures; do
+            [[ ! -d "$MAIN_PATH/External_shaders/$dirName" ]] && continue
+            cd "$MAIN_PATH/External_shaders/$dirName" || continue
+            for file in *; do
+                [[ ! -f $file ]] && continue
+                [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$file" ]] && continue
+                ln -s "$(realpath "$MAIN_PATH/External_shaders/$dirName/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/"
+            done
+            for dir in $(find . -type d); do
+                [[ ! -d "$MAIN_PATH/External_shaders/$dirName/$dir" ]] && continue
+                [[ ! -d "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$dir" ]] && mkdir -p "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$dir"
+                cd "$MAIN_PATH/External_shaders/$dirName/$dir" || continue
+                for file in *; do
+                    [[ ! -f $file ]] && continue
+                    [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$dir/$file" ]] && continue
+                    ln -s "$(realpath "$MAIN_PATH/External_shaders/$dirName/$dir/$file")" "$MAIN_PATH/ReShade_shaders/Merged/$dirName/$dir/"
+                done
+            done
         done
     fi
 fi
