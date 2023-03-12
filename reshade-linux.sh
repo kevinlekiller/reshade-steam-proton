@@ -374,6 +374,20 @@ function linkShaderFiles() {
         ln -s "$INFILE" "$OUTDIR"
     done
 }
+# Check ReShade_shaders or External_shaders directories for directories to link to the Merged folder.
+# $1 ReShade_shaders | External_shaders
+# $2 Optional: Repo name
+function mergeShaderDirs() {
+    [[ $1 != ReShade_shaders && $1 != External_shaders ]] && return
+    for dirName in Shaders Textures; do
+        [[ $1 == "ReShade_shaders" ]] && dirPath=$(find "$MAIN_PATH/$1/$2" ! -path . -type d -name "$dirName") || dirPath="$MAIN_PATH/$1/$dirName"
+        linkShaderFiles "$dirPath" "$dirName"
+        # Check if there are any extra directories inside the Shaders or Texture folder, and link them.
+        while IFS= read -rd '' anyDir; do
+            linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
+        done < <(find . ! -path . -type d -print0)
+    done
+}
 if [[ -n $SHADER_REPOS ]]; then
     echo "Checking for ReShade Shader updates."
     [[ $REBUILD_MERGE == 1 ]] && rm -rf "$MAIN_PATH/ReShade_shaders/Merged/"
@@ -393,26 +407,11 @@ if [[ -n $SHADER_REPOS ]]; then
             [[ -n $branchName ]] && branchName="--branch $branchName" || branchName=
             eval git clone "$branchName" "$URI" "$localRepoName" || echo "Could not clone Shader repo: $URI."
         fi
-        if [[ $MERGE_SHADERS == 1 ]]; then
-            for dirName in Shaders Textures; do
-                dirPath=$(find "$MAIN_PATH/ReShade_shaders/$localRepoName" ! -path . -type d -name "$dirName")
-                linkShaderFiles "$dirPath" "$dirName"
-                while IFS= read -rd '' anyDir; do
-                    linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
-                done < <(find . ! -path . -type d -print0)
-            done
-        fi
+        [[ $MERGE_SHADERS == 1 ]] && mergeShaderDirs "ReShade_shaders" "$localRepoName"
     done
     if [[ $MERGE_SHADERS == 1 ]] && [[ -d "$MAIN_PATH/External_shaders" ]]; then
         echo "Checking for External Shader updates."
-        for dirName in Shaders Textures; do
-            dirPath="$MAIN_PATH/External_shaders/$dirName"
-            linkShaderFiles "$dirPath" "$dirName"
-            # Check if there are any extra directories inside the Shaders or Texture folder, and link them.
-            while IFS= read -rd '' anyDir; do
-                linkShaderFiles "$dirPath/$anyDir" "$dirName/$anyDir"
-            done < <(find . ! -path . -type d -print0)
-        done
+        mergeShaderDirs "External_shaders"
         # Link loose files.
         cd "$MAIN_PATH/External_shaders" || continue
         for file in *; do
