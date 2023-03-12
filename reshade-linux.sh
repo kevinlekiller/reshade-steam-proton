@@ -413,7 +413,7 @@ if [[ -n $SHADER_REPOS ]]; then
         echo "Checking for External Shader updates."
         mergeShaderDirs "External_shaders"
         # Link loose files.
-        cd "$MAIN_PATH/External_shaders" || continue
+        cd "$MAIN_PATH/External_shaders"
         for file in *; do
             [[ ! -f $file || -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
             INFILE="$(realpath "$MAIN_PATH/External_shaders/$file")"
