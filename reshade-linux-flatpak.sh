@@ -21,5 +21,5 @@ LICENSE
 RESHADE_LINUX=$(dirname "$(realpath "$0")")/reshade-linux.sh
 [[ ! -f $RESHADE_LINUX ]] && echo "Unable to find reshade-linux.sh, exiting." && exit 1
 chmod u+x "$RESHADE_LINUX"
-export MAIN_PATH=~/.var/app/com.valvesoftware.Steam/config/reshade
+export MAIN_PATH=~/.var/app/com.valvesoftware.Steam/.local/share/reshade
 "$RESHADE_LINUX"
