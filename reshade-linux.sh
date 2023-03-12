@@ -417,7 +417,10 @@ if [[ -n $SHADER_REPOS ]]; then
         cd "$MAIN_PATH/External_shaders" || continue
         for file in *; do
             [[ ! -f $file || -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
-            ln -s "$(realpath "$MAIN_PATH/External_shaders/$file")" "$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
+            INFILE="$(realpath "$MAIN_PATH/External_shaders/$file")"
+            OUTDIR="$MAIN_PATH/ReShade_shaders/Merged/Shaders/"
+            echo "Linking $INFILE to $OUTDIR"
+            ln -s "$INFILE" "$OUTDIR"
         done
     fi
 fi
