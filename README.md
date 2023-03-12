@@ -37,4 +37,5 @@ Works on any game.
 
 ## Misc
 `reshade-linux.sh` is a newer script which works with any Windows game running under wine or proton.  
+`reshade-linux-flatpak.sh` is a script which executes `reshade-linux.sh` with the correct path for Steam installed from Flatpak.__
 `reshade-steam-proton.sh` is a older script which relies on protontricks / only works with Steam.
