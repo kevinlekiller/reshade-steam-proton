@@ -368,7 +368,7 @@ function linkShaderFiles() {
         [[ ! -f $file ]] && continue
         [[ -L "$MAIN_PATH/ReShade_shaders/Merged/$2/$file" ]] && continue
         INFILE="$(realpath "$1/$file")"
-        OUTDIR="$(realpath "$MAIN_PATH/ReShade_shaders/Merged/$2/$file")"
+        OUTDIR="$(realpath "$MAIN_PATH/ReShade_shaders/Merged/$2/")"
         [[ ! -d $OUTDIR ]] && mkdir -p "$OUTDIR"
         echo "Linking $INFILE to $OUTDIR"
         ln -s "$INFILE" "$OUTDIR"
