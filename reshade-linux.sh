@@ -317,6 +317,7 @@ SHADER_REPOS=${SHADER_REPOS:-"https://github.com/CeeJayDK/SweetFX|sweetfx-shader
 RESHADE_VERSION=${RESHADE_VERSION:-"latest"}
 RESHADE_ADDON_SUPPORT=${RESHADE_ADDON_SUPPORT:-0}
 FORCE_RESHADE_UPDATE_CHECK=${FORCE_RESHADE_UPDATE_CHECK:-0}
+RESHADE_URL="https://reshade.me"
 
 for REQUIRED_EXECUTABLE in $REQUIRED_EXECUTABLES; do
     if ! which "$REQUIRED_EXECUTABLE" &> /dev/null; then
@@ -425,14 +426,16 @@ if [[ $RESHADE_VERSION == latest ]]; then
 fi
 if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="downloads/ReShade_Setup_[\d.]+\.exe"
-    RLINK=$(curl -sL https://reshade.me | grep -Po "$LREGEX" | head -n1)
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+\.exe"
+    RHTML=$(curl --max-time 10 -sL "$RESHADE_URL")
+    [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]] && RHTML=$(curl -sL "http://static.reshade.me")
+    RLINK=$(echo "$RHTML" | grep -Po "$LREGEX" | head -n1)
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(_Addon)?(?=\.exe)")
     if [[ $RVERS != "$LVERS" ]]; then
         [[ -L $RESHADE_PATH/latest ]] && unlink "$RESHADE_PATH/latest"
         echo -e "Updating ReShade to latest version."
-        downloadReshade "$RVERS" "https://reshade.me/$RLINK"
+        downloadReshade "$RVERS" "$RLINK"
         ln -is "$(realpath "$RESHADE_PATH/$RVERS")" "$(realpath "$RESHADE_PATH/latest")"
         echo "$RVERS" > LVERS
         LVERS="$RVERS"
@@ -448,7 +451,7 @@ if [[ $RESHADE_VERSION != latest ]]; then
     if [[ ! -f reshade/$RESHADE_VERSION/ReShade64.dll ]] || [[ ! -f reshade/$RESHADE_VERSION/ReShade32.dll ]]; then
         echo -e "Downloading version $RESHADE_VERSION of ReShade.\n$SEPERATOR\n"
         [[ -e reshade/$RESHADE_VERSION ]] && rm -rf "reshade/$RESHADE_VERSION"
-        downloadReshade "$RESHADE_VERSION" "https://reshade.me/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
+        downloadReshade "$RESHADE_VERSION" "$RESHADE_URL/downloads/ReShade_Setup_$RESHADE_VERSION.exe"
     fi
     echo -e "Using version $RESHADE_VERSION of ReShade.\n"
 else
