@@ -318,6 +318,7 @@ RESHADE_VERSION=${RESHADE_VERSION:-"latest"}
 RESHADE_ADDON_SUPPORT=${RESHADE_ADDON_SUPPORT:-0}
 FORCE_RESHADE_UPDATE_CHECK=${FORCE_RESHADE_UPDATE_CHECK:-0}
 RESHADE_URL="https://reshade.me"
+RESHADE_URL_ALT="http://static.reshade.me"
 
 for REQUIRED_EXECUTABLE in $REQUIRED_EXECUTABLES; do
     if ! which "$REQUIRED_EXECUTABLE" &> /dev/null; then
@@ -439,7 +440,11 @@ if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ 
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
     [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+\.exe"
     RHTML=$(curl --max-time 10 -sL "$RESHADE_URL")
-    [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]] && RHTML=$(curl -sL "http://static.reshade.me")
+    if [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]] then
+        echo "Error: Failed to connect to '$RESHADE_URL' after 10 seconds. Trying to connect to '$RESHADE_URL_ALT'."
+        RHTML=$(curl -sL "$RESHADE_URL_ALT")
+        [[ $? != 0 ]] && echo "Error: Failed to connect to '$RESHADE_URL_ALT'."
+    fi
     RLINK=$(echo "$RHTML" | grep -Po "$LREGEX" | head -n1)
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(_Addon)?(?=\.exe)")
