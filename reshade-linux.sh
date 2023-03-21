@@ -414,7 +414,7 @@ if [[ -n $SHADER_REPOS ]]; then
         echo "Checking for External Shader updates."
         mergeShaderDirs "External_shaders"
         # Link loose files.
-        cd "$MAIN_PATH/External_shaders"
+        cd "$MAIN_PATH/External_shaders" || exit 1
         for file in *; do
             [[ ! -f $file || -L "$MAIN_PATH/ReShade_shaders/Merged/Shaders/$file" ]] && continue
             INFILE="$(realpath "$MAIN_PATH/External_shaders/$file")"
@@ -438,14 +438,16 @@ if [[ $RESHADE_VERSION == latest ]]; then
 fi
 if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="https://\S+/downloads/ReShade_Setup_[\d.]+\.exe"
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="/downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="/downloads/ReShade_Setup_[\d.]+\.exe"
+    RLINK="$RESHADE_URL"
     RHTML=$(curl --max-time 10 -sL "$RESHADE_URL")
-    if [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]] then
+    if [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]]; then
+        RLINK="$RESHADE_URL_ALT"
         echo "Error: Failed to connect to '$RESHADE_URL' after 10 seconds. Trying to connect to '$RESHADE_URL_ALT'."
         RHTML=$(curl -sL "$RESHADE_URL_ALT")
         [[ $? != 0 ]] && echo "Error: Failed to connect to '$RESHADE_URL_ALT'."
     fi
-    RLINK=$(echo "$RHTML" | grep -Po "$LREGEX" | head -n1)
+    RLINK="${RLINK}$(echo "$RHTML" | grep -Po "$LREGEX" | head -n1)"
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     RVERS=$(echo "$RLINK" | grep -Po "[\d.]+(_Addon)?(?=\.exe)")
     if [[ $RVERS != "$LVERS" ]]; then
