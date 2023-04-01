@@ -438,7 +438,7 @@ if [[ $RESHADE_VERSION == latest ]]; then
 fi
 if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="/downloads/ReShade_Setup_[\d.]+_Addon\.exe" || LREGEX="/downloads/ReShade_Setup_[\d.]+\.exe"
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="/downloads/ReShade_Setup_(\d.)+Addon\.exe" || LREGEX="/downloads/ReShade_Setup_(\d.)+exe"
     RHTML=$(curl --max-time 10 -sL "$RESHADE_URL")
     ALT_URL=0
     if [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]]; then
