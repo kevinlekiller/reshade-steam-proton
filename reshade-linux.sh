@@ -438,7 +438,6 @@ if [[ $RESHADE_VERSION == latest ]]; then
 fi
 if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ ! -e reshade/latest/ReShade64.dll ]] || [[ ! -e reshade/latest/ReShade32.dll ]]; then
     echo -e "Checking for Reshade updates.\n$SEPERATOR"
-    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && LREGEX="/downloads/ReShade_Setup_[0-9.]*_Addon\.exe" || LREGEX="/downloads/ReShade_Setup_[0-9.]*\.exe"
     RHTML=$(curl --max-time 10 -sL "$RESHADE_URL")
     ALT_URL=0
     if [[ $? != 0 || $RHTML =~ '<h2>Something went wrong.</h2>' ]]; then
@@ -447,10 +446,10 @@ if [[ $FORCE_RESHADE_UPDATE_CHECK -eq 1 ]] || [[ $UPDATE_RESHADE -eq 1 ]] || [[ 
         RHTML=$(curl -sL "$RESHADE_URL_ALT")
         [[ $? != 0 ]] && echo "Error: Failed to connect to '$RESHADE_URL_ALT'."
     fi
-    RLINK="$(echo "$RHTML" | grep -o "$LREGEX" | head -n1)"
+    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && VREGEX="[0-9][0-9.]*[0-9]_Addon" || VREGEX="[0-9][0-9.]*[0-9]"
+    RLINK="$(echo "$RHTML" | grep -o "/downloads/ReShade_Setup_${VREGEX}\.exe" | head -n1)"
     [[ $RLINK == "" ]] && printErr "Could not fetch ReShade version."
     [[ $ALT_URL -eq 1 ]] && RLINK="${RESHADE_URL_ALT}${RLINK}" || RLINK="${RESHADE_URL}${RLINK}"
-    [[ $RESHADE_ADDON_SUPPORT -eq 1 ]] && VREGEX="[0-9][0-9.]*[0-9]_Addon" || VREGEX="[0-9][0-9.]*[0-9]"
     RVERS=$(echo "$RLINK" | grep -o "$VREGEX")
     if [[ $RVERS != "$LVERS" ]]; then
         [[ -L $RESHADE_PATH/latest ]] && unlink "$RESHADE_PATH/latest"
