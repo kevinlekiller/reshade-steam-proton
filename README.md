@@ -28,12 +28,7 @@ For native Linux Vulkan games, Windows games which can run through DXVK (D3D9 / 
 
 ### vkBasalt through Gamescope:
 
-Since [gamescope](https://github.com/Plagman/gamescope/) can use Vulkan, you can run vkBasalt on gamescope itself, instead of on the game, only issue is gamescope doesn't work with many games I've tried, but that will improve with time.
-
-### kwin-effect-shaders:
-https://github.com/kevinlekiller/kwin-effect-shaders
-
-Works on any game.
+Since [gamescope](https://github.com/Plagman/gamescope/) can use Vulkan, you can run vkBasalt on gamescope itself, instead of on the game.
 
 ## Misc
 `reshade-linux.sh` is a newer script which works with any Windows game running under wine or proton.  
