@@ -33,4 +33,4 @@ Since [gamescope](https://github.com/Plagman/gamescope/) can use Vulkan, you can
 ## Misc
 `reshade-linux.sh` is a newer script which works with any Windows game running under wine or proton.  
 `reshade-linux-flatpak.sh` is a script which executes `reshade-linux.sh` with the correct path for Steam installed from Flatpak.  
-`reshade-steam-proton.sh` is a older script which relies on protontricks / only works with Steam.
+`reshade-steam-proton.sh` (obsolete - will be removed eventually) is a older script which relies on protontricks / only works with Steam.
