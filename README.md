@@ -26,9 +26,13 @@ https://github.com/DadSchoorse/vkBasalt
 
 For native Linux Vulkan games, Windows games which can run through DXVK (D3D9 / D3D10 / D3D11) and Windows games which can run through VKD3D (D3D12).
 
-### vkBasalt through Gamescope:
+### gamescope:
 
-Since [gamescope](https://github.com/Plagman/gamescope/) can use Vulkan, you can run vkBasalt on gamescope itself, instead of on the game.
+Since 3.12.6, [gamescope](https://github.com/ValveSoftware/gamescope) supports a subset of Reshade effects/shaders using the `--reshade-effect [path]` and `--reshade-technique-idx [idx]` command line parameters.
+
+### vkBasalt through gamescope:
+
+Since gamescope can use Vulkan, you can run vkBasalt on gamescope itself, instead of on the game.
 
 ## Misc
 `reshade-linux.sh` is a newer script which works with any Windows game running under wine or proton.  
