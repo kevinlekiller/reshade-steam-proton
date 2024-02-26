@@ -531,7 +531,7 @@ echo "Do you want to (i)nstall or (u)ninstall ReShade for a DirectX or OpenGL ga
 if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
     echo "Unlinking ReShade files."
-    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade.ini ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures ReShade_shaders ${LINK_PRESET}"
+    LINKS="$(echo "$COMMON_OVERRIDES" | awk '{gsub(/ /, ".dll "); print $0 ".dll"}') ReShade.ini ReShade32.json ReShade64.json d3dcompiler_47.dll Shaders Textures ReShade_shaders ${LINK_PRESET}"
     for link in $LINKS; do
         if [[ -L $gamePath/$link ]]; then
             echo "Unlinking \"$gamePath/$link\"."
