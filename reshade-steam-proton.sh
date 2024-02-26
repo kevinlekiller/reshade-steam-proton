@@ -196,7 +196,7 @@ if [[ $(checkStdin "(i/u): " "^(i|u)$") == "u" ]]; then
     getGamePath
     getSteamID
     echo "Unlinking ReShade files."
-    LINKS="$(echo "$COMMON_OVERRIDES" | sed 's/ /.dll /g' | sed 's/$/.dll/') ReShade32.json ReShade64.json Shaders Textures"
+    LINKS="$(printf '%s.dll ' $COMMON_OVERRIDES) ReShade32.json ReShade64.json Shaders Textures"
     for link in $LINKS; do
         if [[ -L $gamePath/$link ]]; then
             echo "Unlinking \"$gamePath/$link\"."
