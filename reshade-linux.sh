@@ -496,31 +496,30 @@ fi
 # TODO Requires changes for ReShade 5.0 ; paths and json files are different.
 # See https://github.com/kevinlekiller/reshade-steam-proton/issues/6#issuecomment-1027230967
 if [[ $VULKAN_SUPPORT == 1 ]]; then
-    printf "Does the game use the Vulkan API?"
-    if [[ $(checkStdin "(y/n): " "^(y|n)$") == "y" ]]; then
-        printf 'Supply the WINEPREFIX path for the game.'
-        printf '(Control+c to exit)'
+    printf "Does the game use the Vulkan API? (y/n): "
+    if [[ $(checkStdin "^(y|n)$") == "y" ]]; then
+        printf 'Supply the WINEPREFIX path for the game. (Control+c to exit)\n'
         while true; do
             read -rp 'WINEPREFIX path: ' WINEPREFIX
             eval WINEPREFIX="$WINEPREFIX"
             WINEPREFIX=$(realpath "$WINEPREFIX")
             if ! ls "$WINEPREFIX" > /dev/null 2>&1 || [[ -z $WINEPREFIX ]]; then
-                printf "Incorrect or empty path supplied. You supplied \"$WINEPREFIX\"."
+                printf "Incorrect or empty path supplied. You supplied \"$WINEPREFIX\".\n"
                 continue
             fi
-            printf "Is this path correct? \"$WINEPREFIX\""
-            [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && break
+            printf "Is this path correct? \"$WINEPREFIX\" (y/n): "
+            [[ $(checkStdin "^(y|n)$") == "y" ]] && break
         done
-        printf "Specify if the game's EXE file architecture is 32 or 64 bits:"
-        [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64 || exeArch=32
+        printf "Specify if the game's EXE file architecture is 32 or 64 bits (32/64): "
+        [[ $(checkStdin "^(32|64)$") == 64 ]] && exeArch=64 || exeArch=32
         export WINEPREFIX="$WINEPREFIX"
-        printf "Do you want to (i)nstall or (u)ninstall ReShade?"
-        if [[ $(checkStdin "(i/u): " "^(i|u)$") == "i" ]]; then
+        printf "Do you want to (i)nstall or (u)ninstall ReShade? (i/u): "
+        if [[ $(checkStdin "^(i|u)$") == "i" ]]; then
             wine reg ADD HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers /d 0 /t REG_DWORD /v "Z:\\home\\$USER\\$WINE_MAIN_PATH\\reshade\\$RESHADE_VERSION\\ReShade$exeArch.json" -f /reg:"$exeArch"
         else
             wine reg DELETE HKLM\\SOFTWARE\\Khronos\\Vulkan\\ImplicitLayers -f /reg:"$exeArch"
         fi
-        [[ $? == 0 ]] && printf "Done." || printf "An error has occured."
+        [[ $? == 0 ]] && printf "Done.\n" || printf "An error has occured.\n"
         exit 0
     fi
 fi
@@ -553,6 +552,7 @@ getGamePath
 printf "Do you want $0 to attempt to automatically detect the right dll files to use for ReShade?"
 [[ $(checkStdin "(y/n) " "^(y|n)$") == "y" ]] && wantedDll="auto" || wantedDll="manual"
 exeArch=32
+
 if [[ $wantedDll == "auto" ]]; then
     for file in "$gamePath/"*.exe; do
         if [[ $(file "$file") =~ x86-64 ]]; then
@@ -560,6 +560,7 @@ if [[ $wantedDll == "auto" ]]; then
             break
         fi
     done
+
     [[ $exeArch -eq 32 ]] && wantedDll="d3d9" || wantedDll="dxgi"
     printf "We have detected the game is $exeArch bits, we will use $wantedDll.dll as the override, is this correct?"
     [[ $(checkStdin "(y/n) " "^(y|n)$") == "n" ]] && wantedDll="manual"
@@ -567,6 +568,7 @@ else
     printf "Specify if the game's EXE file architecture is 32 or 64 bits:"
     [[ $(checkStdin "(32/64) " "^(32|64)$") == 64 ]] && exeArch=64
 fi
+
 if [[ $wantedDll == "manual" ]]; then
     printf "Manually enter the dll override for ReShade, common values are one of: $COMMON_OVERRIDES"
     while true; do
@@ -608,10 +610,17 @@ if [[ -f $MAIN_PATH/$LINK_PRESET ]]; then
 fi
 # Z0045
 
-echo -e "$SEPERATOR\nDone."
+# Print separator line
+printf "$SEPERATOR\nDone."
+
+# Set game environment variable
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
-echo -e "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
+
+# Print instructions for Steam users
+printf "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
+
+# Print instructions for non-Steam users
 printf "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
-printf "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, if they are missing, add the Shaders folder" \
-        "location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths'," \
-        "these folders are located inside the ReShade_shaders folder, finally go to the 'Home' tab, click 'Reload'.\e[0m"
+
+# Print additional instructions for configuring ReShade settings
+printf "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, if they are missing, add the Shaders folder location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths', these folders are located inside the ReShade_shaders folder, finally go to the 'Home' tab, click 'Reload'.\e[0m"
