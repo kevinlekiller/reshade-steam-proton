@@ -611,13 +611,13 @@ fi
 # Z0045
 
 # Print separator line
-printf "$SEPERATOR\nDone."
+echo -e "$SEPERATOR\nDone."
 
 # Set game environment variable
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
 
 # Print instructions for Steam users
-printf "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
+printf '%s' "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
 
 # Print instructions for non-Steam users
 printf "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
