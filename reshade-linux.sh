@@ -608,9 +608,9 @@ if [[ -f $MAIN_PATH/$LINK_PRESET ]]; then
 fi
 # Z0045
 
-printf "$SEPERATOR\nDone."
+echo -e "$SEPERATOR\nDone."
 gameEnvVar="WINEDLLOVERRIDES=\"d3dcompiler_47=n;$wantedDll=n,b\""
-printf "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
+echo -e "\e[40m\e[32mIf you're using Steam, right click the game, click properties, set the 'LAUNCH OPTIONS' to: \e[34m$gameEnvVar %command%"
 printf "\e[32mIf not, run the game with this environment variable set: \e[34m$gameEnvVar"
 printf "\e[32mThe next time you start the game, \e[34mopen the ReShade settings, go to the 'Settings' tab, if they are missing, add the Shaders folder" \
         "location to the 'Effect Search Paths', add the Textures folder to the 'Texture Search Paths'," \
